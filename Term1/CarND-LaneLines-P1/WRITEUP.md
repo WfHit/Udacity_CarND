@@ -22,17 +22,17 @@
 ## Reflection
 ### 1. Describe my pipeline. As part of the description, explain how I modified the draw_lines() function.
 **My pipeline consisted of 6 steps:**  
-1. I converted the images to grayscale.  
+1. I converted the images to grayscale.
 ![alt text][grayscale_image]  
-2. I used Gaussian smoothing to reduce noise in the images.  
+2. I used Gaussian smoothing to reduce noise in the images.
 ![alt text][blur_image]  
-3. I using the Canny image detection algorithm to find boundaries in the images.   
+3. I using the Canny image detection algorithm to find boundaries in the images.
 ![alt text][canny_image]  
-4. I used a polyline to isolate the region of interest (trapezoid). I had to do some fine tuning to find a good compromise here.   
+4. I used a polyline to isolate the region of interest (trapezoid). I had to do some fine tuning to find a good compromise here.
 ![alt text][masked_image]  
-5. I uses the Hough Trasform to identify the lines in the Region of Interest.   
+5. I uses the Hough Trasform to identify the lines in the Region of Interest.
 ![alt text][line_image]  
-6. I stacked the image with lines on top of the original image.   
+6. I stacked the image with lines on top of the original image.
 ![alt text][final_image]  
 
 **In order to draw a single line on the left and right lanes, I modified the draw_lines() function for doing the following:**

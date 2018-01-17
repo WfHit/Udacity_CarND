@@ -21,33 +21,33 @@
 
 ## Reflection
 ### 1. Describe my pipeline. As part of the description, explain how I modified the draw_lines() function.
-**1.My pipeline consisted of 6 steps:**  
-*First, I converted the images to grayscale.*  
+**My pipeline consisted of 6 steps:**  
+*1. I converted the images to grayscale.*  
 ![alt text][grayscale_image]  
-*Then I used Gaussian smoohing to reduce noise in the images.*  
+*2. I used Gaussian smoothing to reduce noise in the images.*  
 ![alt text][blur_image]  
-*The third step is about using the Canny image detection algorithm to find 'object' boundaries in the images.*   
+*3. I using the Canny image detection algorithm to find boundaries in the images.*   
 ![alt text][canny_image]  
-*In the fourth step I used a polyline to isolate the region of interest (trapezoid). I had to do some fine tuning to find a good compromise here.*   
+*4. I used a polyline to isolate the region of interest (trapezoid). I had to do some fine tuning to find a good compromise here.*   
 ![alt text][masked_image]  
-*The fourth step uses the Hough Trasform to identify the lines in the Region of Interest.*   
+*5. I uses the Hough Trasform to identify the lines in the Region of Interest.*   
 ![alt text][line_image]  
-*In the last step I stacked the image with lines on top of the original image.*   
+*6. I stacked the image with lines on top of the original image.*   
 ![alt text][final_image]  
 
-In order to draw a single line on the left and right lanes, I modified the draw_lines() function for doing the following:
-* Filter out horizontal lines 
-* Separate left and right lines based on the slope 
-* Average all the left lines to a single left line 
-* Average all the right lines to a single right line 
-* Extend both the left and right line so to have a line going from bottom to about half of the image 
+**In order to draw a single line on the left and right lanes, I modified the draw_lines() function for doing the following:**
+1. For each line calculates its slope 
+2. According to the slope value, put the line piont to left line lsit or right line list
+3. Using the value in the line list to fit a line
+4. Calculate the up and down boundaries of line to draw
+5. Draw the lines
 
 ### 2. Identify potential shortcomings with your current pipeline
 
 While evaluating the result of my algorithm I identified the following issues: 
 * Handling dashed lines: I had to do some fine tuning to get something acceptable 
 * Handling light changes in the image and color changes in the road (issue visible by looking at the third video) 
-* Hadling slope changes and curves in the road 
+* Handling slope changes and curves in the road 
 
 ### 3. Suggest possible improvements to your pipeline
 

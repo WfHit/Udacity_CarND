@@ -1,9 +1,9 @@
-#**Finding Lane Lines on the Road** 
----
+# **Finding Lane Lines on the Road** 
+[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
 
-**Finding Lane Lines on the Road**
+<img src="examples/laneLines_thirdPass.jpg" width="480" alt="Combined Image" />
 
-The goals / steps of this project are the following: 
+**The goals / steps of this project are the following:** 
 * Make a pipeline that finds lane lines on the road 
 * Reflect on work in a written report 
 
@@ -19,22 +19,22 @@ The goals / steps of this project are the following:
 
 ---
 
-### Reflection
+## Reflection
 
-###1. Describe your pipeline. As part of the description, explain how you modified the draw_lines() function.
+###1. Describe my pipeline. As part of the description, explain how I modified the draw_lines() function.
 
-My pipeline consisted of 6 steps:  
-First, I converted the images to grayscale.   
+**My pipeline consisted of 6 steps:**
+*First, I converted the images to grayscale.*
 ![alt text][grayscale_image]
-Then I used Gaussian smoohing to reduce noise in the images. 
+*Then I used Gaussian smoohing to reduce noise in the images.*
 ![alt text][blur_image]
-The third step is about using the Canny image detection algorithm to find 'object' boundaries in the images. 
+*The third step is about using the Canny image detection algorithm to find 'object' boundaries in the images.* 
 ![alt text][canny_image]
-In the fourth step I used a polyline to isolate the region of interest (trapezoid). I had to do some fine tuning to find a good compromise here. 
+*In the fourth step I used a polyline to isolate the region of interest (trapezoid). I had to do some fine tuning to find a good compromise here.* 
 ![alt text][masked_image]
-The fourth step uses the Hough Trasform to identify the lines in the Region of Interest. 
+*The fourth step uses the Hough Trasform to identify the lines in the Region of Interest.* 
 ![alt text][line_image]
-In the last step I stacked the image with lines on top of the original image. 
+*In the last step I stacked the image with lines on top of the original image.* 
 ![alt text][final_image]
 
 In order to draw a single line on the left and right lanes, I modified the draw_lines() function for doing the following:

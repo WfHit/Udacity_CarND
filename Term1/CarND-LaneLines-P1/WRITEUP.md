@@ -24,40 +24,28 @@
 **My pipeline consisted of 6 steps:**  
 1. I converted the images to grayscale.
 <center>
-<img src = "writeup_images/solidWhiteRight/solidWhiteRight_gray.jpg" width="25%" height="25%" />
-Figure 1. Grayscale
-$ $
-</center>
+<img src = "writeup_images/solidWhiteRight/solidWhiteRight_gray.jpg" width="50%" height="50%" />
+</center>  
 2. I used Gaussian smoothing to reduce noise in the images.
 <center>
-<img src = "writeup_images/solidWhiteRight/solidWhiteRight_blur.jpg" width="25%" height="25%" />
-Figure 2. Gaussian smoothing
-$ $
-</center>
+<img src = "writeup_images/solidWhiteRight/solidWhiteRight_blur.jpg" width="50%" height="50%" />
+</center>  
 3. I using the Canny image detection algorithm to find boundaries in the images.
 <center>
-<img src = "writeup_images/solidWhiteRight/solidWhiteRight_canny_edges.jpg" width="25%" height="25%" />
-Figure 3. Canny Edge Detection
-$ $
-</center>
+<img src = "writeup_images/solidWhiteRight/solidWhiteRight_canny_edges.jpg" width="50%" height="50%" />
+</center>  
 4. I used a polyline to isolate the region of interest (trapezoid). I had to do some fine tuning to find a good compromise here.
 <center>
-<img src = "writeup_images/solidWhiteRight/solidWhiteRight_roi.jpg" width="25%" height="25%" />
-Figure 4. Region of Interest
-$ $
-</center>
+<img src = "writeup_images/solidWhiteRight/solidWhiteRight_roi.jpg" width="50%" height="50%" />
+</center>  
 5. I uses the Hough Trasform to identify the lines in the Region of Interest.
 <center>
-<img src = "writeup_images/solidWhiteRight/solidWhiteRight_line.jpg" width="25%" height="25%" />
-Figure 5. Hough Transform
-$ $
-</center>
+<img src = "writeup_images/solidWhiteRight/solidWhiteRight_line.jpg" width="50%" height="50%" />
+</center>  
 6. I stacked the image with lines on top of the original image.
 <center>
-<img src = "writeup_images/solidWhiteRight/solidWhiteRight.jpg" width="25%" height="25%" />
-Figure 6. Final image
-$ $
-</center>
+<img src = "writeup_images/solidWhiteRight/solidWhiteRight.jpg" width="50%" height="50%" />
+</center>  
 
 **In order to draw a single line on the left and right lanes, I modified the draw_lines() function for doing the following:**
 1. For each line calculates its slope 

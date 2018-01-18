@@ -34,7 +34,7 @@
 <center>
 <img src = "writeup_images/solidWhiteRight/solidWhiteRight_canny_edges.jpg" width="50%" height="50%" />
 </center>  
-4. I used a polyline to isolate the region of interest (trapezoid). I had to do some fine tuning to find a good compromise here.
+4. I used a polyline to isolate the region of interest (trapezoid). 
 <center>
 <img src = "writeup_images/solidWhiteRight/solidWhiteRight_roi.jpg" width="50%" height="50%" />
 </center>  

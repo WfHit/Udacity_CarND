@@ -44,7 +44,7 @@
 </center>  
 6. I stacked the image with lines on top of the original image.
 <center>
-<img src = "writeup_images/solidWhiteRight/solidWhiteRight.jpg" width="50%" height="50%" />
+<img src = "/test_images_output/solidWhiteRight.jpg" width="50%" height="50%" />
 </center>  
 
 **In order to draw a single line on the left and right lanes, I modified the draw_lines() function for doing the following:**

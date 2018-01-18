@@ -23,17 +23,41 @@
 ### 1. Describe my pipeline. As part of the description, explain how I modified the draw_lines() function.
 **My pipeline consisted of 6 steps:**  
 1. I converted the images to grayscale.
-![alt text][grayscale_image]  
+<center>
+<img src = "writeup_images/solidWhiteRight/solidWhiteRight_gray.jpg" width="25%" height="25%" />
+Figure 1. Grayscale
+$ $
+</center>
 2. I used Gaussian smoothing to reduce noise in the images.
-![alt text][blur_image]  
+<center>
+<img src = "writeup_images/solidWhiteRight/solidWhiteRight_blur.jpg" width="25%" height="25%" />
+Figure 2. Gaussian smoothing
+$ $
+</center>
 3. I using the Canny image detection algorithm to find boundaries in the images.
-![alt text][canny_image]  
+<center>
+<img src = "writeup_images/solidWhiteRight/solidWhiteRight_canny_edges.jpg" width="25%" height="25%" />
+Figure 3. Canny Edge Detection
+$ $
+</center>
 4. I used a polyline to isolate the region of interest (trapezoid). I had to do some fine tuning to find a good compromise here.
-![alt text][masked_image]  
+<center>
+<img src = "writeup_images/solidWhiteRight/solidWhiteRight_roi.jpg" width="25%" height="25%" />
+Figure 4. Region of Interest
+$ $
+</center>
 5. I uses the Hough Trasform to identify the lines in the Region of Interest.
-![alt text][line_image]  
+<center>
+<img src = "writeup_images/solidWhiteRight/solidWhiteRight_line.jpg" width="25%" height="25%" />
+Figure 5. Hough Transform
+$ $
+</center>
 6. I stacked the image with lines on top of the original image.
-![alt text][final_image]  
+<center>
+<img src = "writeup_images/solidWhiteRight/solidWhiteRight.jpg" width="25%" height="25%" />
+Figure 6. Final image
+$ $
+</center>
 
 **In order to draw a single line on the left and right lanes, I modified the draw_lines() function for doing the following:**
 1. For each line calculates its slope 
@@ -44,11 +68,11 @@
 
 ### 2. Identify potential shortcomings with your current pipeline
 
-While evaluating the result of my algorithm I identified the following issues: 
-* Handling dashed lines: I had to do some fine tuning to get something acceptable 
-* Handling light changes in the image and color changes in the road (issue visible by looking at the third video) 
-* Handling slope changes and curves in the road 
+When I testing my algorithm I find the following shortcomings: 
+1. The slope of line is easily interfered by the small dashed lines; 
+2. The result is easily disturbed by the color and shadows;
+3. The algorithm is not suitable for curving road;
 
 ### 3. Suggest possible improvements to your pipeline
 
-A possible improvement would be to process the image in order to have better robustness agains light changes in the image, for instance increasing the contrast. Another potential improvement could be to process the image in such a way to isolate and extract yellow and white lines. 
+As to the throbbing slope, a possible improvement would be to smoothing the slope to archive a stable line. To increasing the contrast of the image in order to have better robustness agains shadows in the image. 

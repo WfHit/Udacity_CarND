@@ -21,7 +21,7 @@ The goals / steps of this project are the following:
 [data_set_histogram_Train]: ./writeup_images/data_set_histogram_Train.png "data_set_histogram_Train"
 [data_set_histogram_Vaild]: ./writeup_images/data_set_histogram_Vaild.png "data_set_histogram_Vaild"
 [data_set_histogram_Test]: ./writeup_images/data_set_histogram_Test.png "data_set_histogram_Test"
-[image_preprocess]: ./writeup_images/dimage_preprocess.png "image_preprocess"
+[image_preprocess]: ./writeup_images/image_preprocess.png "image_preprocess"
 [new_test_images]: ./writeup_images/new_test_images.png "new_test_images"
 [new_test_images_top_five]: ./writeup_images/new_test_images_top_five.png "new_test_images_top_five"
 
@@ -50,8 +50,8 @@ signs data set:
 
 #### 2. Include an exploratory visualization of the dataset.
 
-Here is an exploratory visualization of the data set. It is a bar chart showing how the data distributes
-It can be interesting to look at the distribution of classes in the training, validation and test set. Is the distribution the same? Are there more examples of some classes than others?
+Here is an exploratory visualization of the data set. It is a bar chart showing how the data distributes.
+It is obvious that the distribution of the three sets is the same, but the frequency of traffic signs in each set is different.
 ![alt text][data_set_exploration]
 ![alt text][data_set_histogram_Train]
 ![alt text][data_set_histogram_Vaild]
@@ -134,14 +134,14 @@ Here are the results of the prediction:
 
 | Image			        |     Prediction	        					| 
 |:---------------------:|:---------------------------------------------:| 
-| Stop Sign      		| Stop sign   									| 
-| U-turn     			| U-turn 										|
-| Yield					| Yield											|
-| 100 km/h	      		| Bumpy Road					 				|
-| Slippery Road			| Slippery Road      							|
+| Speed limit(20km/h)   | Speed limit(20km/h)  							| 
+| Speed limit(30km/h)   | Speed limit(30km/h)  							|
+| Traffic signals		| Traffic signals								|
+| Wild animals crossing | Wild animals crossing					 		|
+| Keep left			    | Keep left     							    |
 
 
-The model was able to correctly guess 4 of the 5 traffic signs, which gives an accuracy of 80%. This compares favorably to the accuracy on the test set of ...
+The model was able to correctly guess 5 of the 5 traffic signs, which gives an accuracy of 100%. This compares favorably to the accuracy on the test set of 0.938
 
 #### 3. Describe how certain the model is when predicting on each of the five new images by looking at the softmax probabilities for each prediction. Provide the top 5 softmax probabilities for each image along with the sign type of each probability. (OPTIONAL: as described in the "Stand Out Suggestions" part of the rubric, visualizations can also be provided such as bar charts)
 
@@ -149,18 +149,15 @@ The model was able to correctly guess 4 of the 5 traffic signs, which gives an a
 ![alt text][new_test_images_top_five] 
 
 
-For the first image, the model is relatively sure that this is a stop sign (probability of 0.6), and the image does contain a stop sign. The top five soft max probabilities were
+For the first image, the model is relatively sure that this is a Speed limit(20km/h) sign , and the image does contain a Speed limit(20km/h) sign. The top five soft max probabilities were shown in up graph.
 
-| Probability         	|     Prediction	        					| 
-|:---------------------:|:---------------------------------------------:| 
-| .60         			| Stop sign   									| 
-| .20     				| U-turn 										|
-| .05					| Yield											|
-| .04	      			| Bumpy Road					 				|
-| .01				    | Slippery Road      							|
+For the second image, the model is relatively sure that this is a Speed limit(30km/h) sign , and the image does contain a Speed limit(30km/h) sign. The top five soft max probabilities were shown in up graph.
 
+For the third image, the model is relatively sure that this is a Traffic signals sign , and the image does contain a Traffic signals sign. The top five soft max probabilities were shown in up graph.
 
-For the second image ... 
+For the fourth image, the model is relatively sure that this is a Wild animals crossing sign , and the image does contain a Wild animals crossing sign. The top five soft max probabilities were shown in up graph.
+
+For the fifth image, the model is relatively sure that this is a Keep left sign , and the image does contain aKeep left sign. The top five soft max probabilities were shown in up graph.
 
 ### (Optional) Visualizing the Neural Network (See Step 4 of the Ipython notebook for more details)
 #### 1. Discuss the visual output of your trained network's feature maps. What characteristics did the neural network use to make classifications?

@@ -115,7 +115,7 @@ My final model results were:
 Why I think the architecture is suitable for the current problem:
 * I choose to use a well known architecture: LeNet-5.
 * Because, as we all known, LeNet is a very classic structure, it has a simple structure and easy to training, LeNet has been shown that can be used for recognition of handwritten font. On the other hand, traffic sign images are similar to handwritten font images both in image size and complexity of context, so I think that LeNet is perfect choose to slove the task of recognition traffic signs.
-* As shown about, the accuracies on training, validation and test are both more than %, this is the evidence that the model is working well.
+* As shown about, the accuracies on training, validation and test are both more than 93%, this is the evidence that the model is working well.
 
 
 ### Test a Model on New Images
@@ -126,7 +126,7 @@ Here are five German traffic signs that I found on the web:
 
 ![alt text][new_test_images] 
 
-The first image might be difficult to classify because ...
+The fourth image might be difficult to classify because the picture is dim and hard to be identified.
 
 #### 2. Discuss the model's predictions on these new traffic signs and compare the results to predicting on the test set. At a minimum, discuss what the predictions were, the accuracy on these new predictions, and compare the accuracy to the accuracy on the test set (OPTIONAL: Discuss the results in more detail as described in the "Stand Out Suggestions" part of the rubric).
 

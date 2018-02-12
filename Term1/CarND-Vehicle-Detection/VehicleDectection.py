@@ -1,6 +1,7 @@
 #/usr/bin/env python3
 '''
 '''
+import time
 import pickle
 import cv2
 import glob
@@ -11,25 +12,57 @@ from skimage.feature import hog
 from moviepy.editor import VideoFileClip
 from IPython.display import HTML
 from sklearn.preprocessing import StandardScaler
+from sklearn.svm import LinearSVC
+from skimage.feature import hog
+# for scikit-learn >= 0.18 use:
+from sklearn.model_selection import train_test_split
+#from sklearn.cross_validation import train_test_split
 
 ################################ Ectract Features ###################################
 
 # Define a function to return HOG features and visualization
-def get_hog_features(rgb_image, orient=9, pix_per_cell=8, cell_per_block=2 , vis=True, feature_vec=True):
-    # Convert rgb image to gray image
-    gray_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
+def get_hog_features(rgb_image, hog_channel='GRAY', orient=9, pix_per_cell=8, cell_per_block=2 , vis=True, feature_vec=True):
+    channels = []
+    hog_features = []
+    hog_images = []
+    if hog_channel == 'GRAY':
+        # Convert rgb image to gray image
+        channels.append(cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY))
+    elif if hog_channel == 'RED':
+        channels.append(feature_image[:,:,0])
+    elif if hog_channel == 'GREEN':
+        channels.append(feature_image[:,:,1])
+    elif if hog_channel == 'BLUE':
+        channels.append(feature_image[:,:,2])
+    elif if hog_channel == 'ALL':
+        channels.append(feature_image[:,:,0])
+        channels.append(feature_image[:,:,1])
+        channels.append(feature_image[:,:,2])
+    
     if vis == True:
         # Use skimage.hog() to get both features and a visualization
-        features, hog_image = hog(gray_image, orientations=orient, pixels_per_cell=(pix_per_cell, pix_per_cell),
+        for single_channel_image in channels:
+            features, hog_image = hog(single_channel_image, orientations=orient, pixels_per_cell=(pix_per_cell, pix_per_cell),
                                   cells_per_block=(cell_per_block, cell_per_block), transform_sqrt=False, 
-                                  visualise=True, feature_vector=False)
-        return features, hog_image
+                                  visualise=True, feature_vector=feature_vec)
+            hog_features.append(features)
+            hog_images.append(hog_image)
+            
+        hog_features = np.ravel(hog_features)   
+        
+        return features, hog_images
 
     else:      
         # Use skimage.hog() to get features only
-        features = hog(gray_image, orientations=orient, pixels_per_cell=(pix_per_cell, pix_per_cell),
+        for single_channel_image in channels:
+            features = hog(single_channel_image, orientations=orient, pixels_per_cell=(pix_per_cell, pix_per_cell),
                        cells_per_block=(cell_per_block, cell_per_block), transform_sqrt=False, 
                        visualise=False, feature_vector=feature_vec)
+
+            hog_features.append(features)
+
+        hog_features = np.ravel(hog_features)   
+        
         return features
 
 def test_hog_frature():
@@ -79,8 +112,6 @@ def bin_spatial(rgb_img, color_space='RGB', size=(32, 32)):
         feature_image = cv2.cvtColor(rgb_img, cv2.COLOR_RGB2HLS)
     elif color_space == 'YUV':
         feature_image = cv2.cvtColor(rgb_img, cv2.COLOR_RGB2YUV)
-    elif color_space == 'YCrCb':
-        feature_image = cv2.cvtColor(rgb_img, cv2.COLOR_RGB2YCrCb)
              
     # Use cv2.resize().ravel() to create the feature vector
     features = cv2.resize(feature_image, size).ravel() 
@@ -178,36 +209,6 @@ def get_image_features():
     
     
 ################################ Clarify Features ###################################
-
-import matplotlib.image as mpimg
-import matplotlib.pyplot as plt
-import numpy as np
-import cv2
-import glob
-import time
-from sklearn.svm import LinearSVC
-from sklearn.preprocessing import StandardScaler
-from skimage.feature import hog
-# NOTE: the next import is only valid for scikit-learn version <= 0.17
-# for scikit-learn >= 0.18 use:
-# from sklearn.model_selection import train_test_split
-from sklearn.cross_validation import train_test_split
-
-# Define a function to return HOG features and visualization
-def get_hog_features(img, orient, pix_per_cell, cell_per_block, 
-                        vis=False, feature_vec=True):
-    # Call with two outputs if vis==True
-    if vis == True:
-        features, hog_image = hog(img, orientations=orient, pixels_per_cell=(pix_per_cell, pix_per_cell),
-                                  cells_per_block=(cell_per_block, cell_per_block), transform_sqrt=True, 
-                                  visualise=vis, feature_vector=feature_vec)
-        return features, hog_image
-    # Otherwise call with one output
-    else:      
-        features = hog(img, orientations=orient, pixels_per_cell=(pix_per_cell, pix_per_cell),
-                       cells_per_block=(cell_per_block, cell_per_block), transform_sqrt=True, 
-                       visualise=vis, feature_vector=feature_vec)
-        return features
 
 # Define a function to extract features from a list of images
 # Have this function call bin_spatial() and color_hist()

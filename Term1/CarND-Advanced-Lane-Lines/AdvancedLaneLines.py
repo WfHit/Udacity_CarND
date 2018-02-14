@@ -416,11 +416,11 @@ def process_image_1(image):
               
 def process_video():
         
-    white_output = 'output_images/abc.mp4'
+    write_output = 'output_images/abc.mp4'
 
     clip1 = VideoFileClip("project_video.mp4")
     white_clip = clip1.fl_image(process_image_1) #NOTE: this function expects color images!!
-    white_clip.write_videofile(white_output, audio=False)
+    white_clip.write_videofile(write_output, audio=False)
     
 #process_image()
 

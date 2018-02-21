@@ -31,9 +31,9 @@ image_shape = None
         
 for image_file_path in images:
     # Read in an image
-    image = cv2.imread(image_file_path)
+    rgb_image = mpimg.imread(file_path)(image_file_path)
     # Convert to grayscale
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    gray = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)
     
     # Record image shape
     image_shape = gray.shape[::-1]
@@ -72,11 +72,11 @@ fig = plt.figure(figsize=(50, 50))
 counter = 0
 for image_file_path in images:
     # Read in an image
-    image = cv2.imread(image_file_path)
-    undist = cv2.undistort(image, mtx, dist, None, mtx)
+    rgb_image = mpimg.imread(image_file_path)
+    undist = cv2.undistort(rgb_image, mtx, dist, None, mtx)
     image = image.squeeze()
     undist = undist.squeeze()
-    cv2.imwrite('output_images/camera_cal/'+image_file_path.split('/')[-1], undist)
+    mpimg.imsave('output_images/camera_cal/'+image_file_path.split('/')[-1], undist)
     ax = fig.add_subplot(2, len(images), counter+1)
     ax.imshow(image)
     ax.set_title('Original Image', fontsize=10)

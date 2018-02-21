@@ -22,7 +22,7 @@ import pdb
 
 # Define a function to return HOG features
 # Input must be RGB image
-def get_hog_features(rgb_image, color_space='GRAY', hog_channel='ALL', orient=9, 
+def get_hog_features(rgb_image, color_space='HLS', hog_channel='ALL', orient=9, 
                     pix_per_cell=8, cell_per_block=2 , 
                     vis=True, feature_vec=True):
     channels = []
@@ -113,7 +113,7 @@ def test_hog_frature():
 # Define a function to compute color histogram features  
 # Pass the color_space flag as 3-letter all caps string
 # like 'HSV' or 'LUV' etc.
-def bin_spatial(rgb_img, color_space='RGB', size=(16, 16)):
+def bin_spatial(rgb_img, color_space='RGB', size=(32, 32)):
     # Convert image to new color space (if specified)
     if color_space == 'RGB':
         feature_image = np.copy(rgb_img)
@@ -133,7 +133,7 @@ def bin_spatial(rgb_img, color_space='RGB', size=(16, 16)):
     
 
 # Define a function to compute color histogram features  
-def color_hist(rgb_img, color_space='RGB', nbins=128, bins_range=(0, 256)):
+def color_hist(rgb_img, color_space='RGB', nbins=32, bins_range=(0, 256)):
     # Convert image to new color space (if specified)
     if color_space =='RGB':
         feature_image = np.copy(rgb_img)
@@ -161,19 +161,19 @@ def color_hist(rgb_img, color_space='RGB', nbins=128, bins_range=(0, 256)):
 # Define a function to extract features from a list of images
 def extract_features(rgb_image):
     # Apply hog() to get hog features
-    hog_features_1 = get_hog_features(rgb_image, color_space='GRAY', vis=False, feature_vec=True)
+    hog_features_1 = get_hog_features(rgb_image, color_space='HLS', vis=False, feature_vec=True)
     #hog_features_2 = get_hog_features(rgb_image, color_space='YUV', vis=False, feature_vec=True)
     #print("hog_features length:", len(hog_features_1))
     # Apply bin_spatial() to get spatial color features
     spatial_features_1 = bin_spatial(rgb_image, color_space='RGB')
-    spatial_features_2 = bin_spatial(rgb_image, color_space='LUV')
+    #spatial_features_2 = bin_spatial(rgb_image, color_space='LUV')
     #print("spatial_features length:", len(spatial_features_1))
     # Apply color_hist() to get color histogram features
     hist_features_1 = color_hist(rgb_image, color_space='RGB')
     hist_features_2 = color_hist(rgb_image, color_space='YUV')
     #print("hist_features length:", len(hist_features_1))
     # Return list of feature vectors
-    return np.concatenate((hog_features_1, spatial_features_1, spatial_features_2, hist_features_1, hist_features_2))
+    return np.concatenate((hog_features_1, spatial_features_1, hist_features_1, hist_features_2))
 
 
 ################################ Train Classify ################################
@@ -203,7 +203,7 @@ def train_classifier() :
     
     # Reduce the sample size because HOG features are slow to compute
     # The quiz evaluator times out after 13s of CPU time
-    sample_size = 8000
+    sample_size = 4000
     cars = cars[0:sample_size]
     notcars = notcars[0:sample_size]
     
@@ -292,7 +292,7 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
         y_start_stop[0] = 0
     if y_start_stop[1] == None:
         y_start_stop[1] = img.shape[0]
-    
+    '''
     if x_start_stop[0] < 0 :
         x_start_stop[0] = 0
     if x_start_stop[1] > img.shape[1]:
@@ -301,7 +301,7 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
         y_start_stop[0] = 0
     if y_start_stop[1] > img.shape[0]:
         y_start_stop[1] = img.shape[0]
-        
+    '''    
     # Compute the span of the region to be searched  
     xspan = x_start_stop[1] - x_start_stop[0]
     yspan = y_start_stop[1] - y_start_stop[0]
@@ -327,7 +327,7 @@ def slide_window(img, x_start_stop=[None, None], y_start_stop=[None, None],
             starty = ys*ny_pix_per_step + y_start_stop[0]
             endy = starty + xy_window[1]
             # Append window position to list
-            window_list.append(((startx, starty), (endx, endy)))
+            window_list.append(((int(startx), int(starty)), (int(endx), int(endy))))
     # Return the list of windows
     return window_list
 
@@ -335,17 +335,39 @@ def generate_serach_windows(image) :
     search_window_list = [] 
     print("image size X:", image.shape[1])
     print("image size Y:", image.shape[0])
+    '''
     for counter in range(10):
         window_size = 32 * (counter+1)
         windows = slide_window(image, x_start_stop=[0, image.shape[1]], 
                     y_start_stop=[image.shape[0]/2, image.shape[0]/2+120+counter*24], 
-                    xy_window=(window_size, window_size), xy_overlap=(0.5, 0.5))
+                    xy_window=(2*window_size, window_size), xy_overlap=(0.5, 0.5))
         for window in windows :
             search_window_list.append(window)       
     print(search_window_list[0])
     print("Number of search windows:", len(search_window_list))
+    '''
+    xy_window_list = [(64,64), (128,128), (256,256)]
+    #x_start_stop_list = [[380, 500], [380, 600], [360, 700], [360, None]]
+    y_start_stop_list = [[380, 500], [380, 600], [360, None]]
+    for i in range(len(xy_window_list)):
+        windows = slide_window(image, x_start_stop=[None, None], y_start_stop=y_start_stop_list[i], 
+                            xy_window=xy_window_list[i], xy_overlap=(0.9, 0.9))
+        for window in windows :
+            search_window_list.append(window) 
+    print("Number of search windows:", len(search_window_list))
     return search_window_list
 
+
+def draw_boxes(img, bboxes, color=(0, 0, 255), thick=1):
+    # Make a copy of the image
+    imcopy = np.copy(img)
+    # Iterate through the bounding boxes
+    for bbox in bboxes:
+        # Draw a rectangle given bbox coordinates
+        cv2.rectangle(imcopy, bbox[0], bbox[1], color, thick)
+    # Return the image copy with boxes drawn
+    return imcopy
+    
 
 # Define a function you will pass an image 
 # and the list of windows to be searched (output of slide_windows())
@@ -358,7 +380,7 @@ def search_cars(orignal_image, search_windows, clf, scaler):
         feature_img = cv2.resize( orignal_image[
                                 int(window[0][1]):int(window[1][1]), 
                                 int(window[0][0]):int(window[1][0])], 
-                                (64, 64) )      
+                                (64, 64), interpolation=cv2.INTER_LINEAR)      
         #4) Extract features for that window using single_img_features()
         features = extract_features(feature_img)
         #5) Scale extracted features to be fed to classifier
@@ -382,15 +404,16 @@ def add_heat(orignal_image, hit_windows):
         # Add += 1 for all pixels inside each bbox
         # Assuming each "box" takes the form ((x1, y1), (x2, y2))
         heatmap[int(box[0][1]):int(box[1][1]), int(box[0][0]):int(box[1][0])] += 1
-
     # Return updated heatmap
     return heatmap# Iterate through list of bboxes
+
     
 def apply_threshold(heatmap, threshold):
     # Zero out pixels below the threshold
     heatmap[heatmap <= threshold] = 0
     # Return thresholded map
     return heatmap
+
 
 def draw_labeled_bboxes(image, labels):
     # Iterate through all detected cars
@@ -403,36 +426,31 @@ def draw_labeled_bboxes(image, labels):
         # Define a bounding box based on min/max x and y
         bbox = ((np.min(nonzerox), np.min(nonzeroy)), (np.max(nonzerox), np.max(nonzeroy)))
         # Draw the box on the image
-        cv2.rectangle(image, bbox[0], bbox[1], (0,0,255), 6)
+        cv2.rectangle(image, bbox[0], bbox[1], (0,0,255), 3)
     # Return the image
     return image
 
-def argument_display(orignal_image, hit_windows) :
 
+def argument_display(orignal_image, hit_windows) :
     # Add heat to each box in box list
     heatmap = add_heat(orignal_image, hit_windows)
     # Apply threshold to help remove false positives
-    heatmap = apply_threshold(heatmap, threshold=3)
+    heatmap = apply_threshold(heatmap, threshold=2)
     # Visualize the heatmap when displaying    
     #heatmap_visual = np.clip(heatmap, 0, 255)
-
     # Find final boxes from heatmap using label function
     labels = label(heatmap)
-    #print(labels[1], 'cars found')
+    print(labels[1], 'cars found')
     #plt.imshow(labels[0], cmap='gray')
-    draw_img = draw_labeled_bboxes(np.copy(orignal_image), labels)
-    
+    draw_img = draw_labeled_bboxes(orignal_image, labels)   
     return draw_img, heatmap
+
 
 ################################ Vehicle Detect ################################
 def vehicle_detection_images(clf, scaler) :
-
-    features = []
-  
     # read in images
     images_path = glob.glob('test_images/*.jpg')
-    print("Images number:", len(images_path))
-    
+    print("Images number:", len(images_path))    
     # Iterate through the list of images
     for file_path in images_path:
         # Read in each one by one
@@ -443,51 +461,51 @@ def vehicle_detection_images(clf, scaler) :
         orignal_image = rgb_image.astype(np.float32)/255
         # process images
         search_windows = generate_serach_windows(orignal_image)
+        box_image = draw_boxes(orignal_image, search_windows, color=(0, 0, 255), thick=3)
         hit_windows = search_cars(orignal_image, search_windows, clf, scaler)
         draw_img, heatmap = argument_display(orignal_image, hit_windows) 
+        
         fig = plt.figure()
-        plt.subplot(121)
+        plt.subplot(131)
         plt.imshow(draw_img)
         plt.title('Car Positions')
-        plt.subplot(122)
+        plt.subplot(132)
+        plt.imshow(box_image)
+        plt.title('Box Image')
+        plt.subplot(133)
         plt.imshow(heatmap, cmap='hot')
         plt.title('Heat Map')
         fig.tight_layout()
         plt.show()
     
-def image_prcess(rgb_image, clf, scal):
-    orignal_image = rgb_image.astype(np.float32)/255
-    # process images
-    search_windows = generate_serach_windows(orignal_image)
-    hit_windows = search_cars(orignal_image, search_windows, clf, scaler)
-    draw_img, heatmap = argument_display(orignal_image, hit_windows) 
-    
-def vehicle_detection_video(classfy, scaler) :
-    pass
 
 ##################################### Run #####################################
-def run() :
+def run_images() :
     #test_hog_frature()
     clf, scaler = train_classifier()
     #clf = None
-    #vehicle_detection_images(clf, scaler)
-    #vehicle_detection_video(clf, scaler)
+    vehicle_detection_images(clf, scaler)
+
+def run_video() :   
+    #test_hog_frature()
+    clf, scaler = train_classifier()
     
     def image_prcess(rgb_image):
         orignal_image = rgb_image.astype(np.float32)/255
         # process images
         search_windows = generate_serach_windows(orignal_image)
         hit_windows = search_cars(orignal_image, search_windows, clf, scaler)
-        draw_img, heatmap = argument_display(orignal_image, hit_windows) 
-        return draw_img*255
+        draw_img, heatmap = argument_display(rgb_image, hit_windows) 
+        return draw_img
+        
     #read in video
     write_output = 'output_images/abc.mp4'
-
-    clip1 = VideoFileClip("project_video.mp4")
+    clip1 = VideoFileClip("test_video.mp4")
     white_clip = clip1.fl_image(image_prcess) #NOTE: this function expects color images!!
     white_clip.write_videofile(write_output, audio=False)
-    
+
     
 if __name__ == '__main__':
-    run()   
+    #run_images() 
+    run_video()  
     

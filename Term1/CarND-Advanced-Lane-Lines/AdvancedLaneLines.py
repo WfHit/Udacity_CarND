@@ -482,14 +482,14 @@ class C_LaneLine_t:
                 # Calculate the new rad of curvature
                 left_curverad = ((1 + (2*left_fit_meter[0]*image_size_x_y[1]*self.ym_per_pix + left_fit_meter[1])**2)**1.5) / np.absolute(2*left_fit_meter[0])
                 right_curverad = ((1 + (2*right_fit_meter[0]*image_size_x_y[1]*self.ym_per_pix + right_fit_meter[1])**2)**1.5) / np.absolute(2*right_fit_meter[0])
-                if (np.absolute(left_curverad-right_curverad) < 1500) and (np.absolute((right_fit_meter[2]-self.lane_line_center) - (self.lane_line_center-left_fit_meter[2]))<1) :
-                    if len(self.left_fit_list) < 5 :
+                if (np.absolute(left_curverad-right_curverad) < 1000) and (np.absolute((right_fit_meter[2]-self.lane_line_center) - (self.lane_line_center-left_fit_meter[2]))<1) :
+                    if len(self.left_fit_list) < 10 :
                         self.left_fit_list.append(left_fit)
                     else :
                         temp_list = self.left_fit_list[1:]
                         temp_list.append(left_fit)
                         self.left_fit_list = temp_list
-                    if len(self.right_fit_list) < 5 :
+                    if len(self.right_fit_list) < 10 :
                         self.right_fit_list.append(right_fit)
                     else :
                         temp_list = self.right_fit_list[1:]
@@ -518,7 +518,7 @@ class C_LaneLine_t:
         #Reset
         if not self.detected :
             self.failed_detected_counter += 1
-            if self.failed_detected_counter > 4 : 
+            if self.failed_detected_counter > 6 : 
                 self.failed_detected_counter = 0
                 self.working  = False
                 self.need_reset = True
@@ -621,8 +621,7 @@ class C_LaneLine_t:
         curv_text = 'Curve radius left: {0:04.2f} m right: {1:04.2f} m'.format(left_curverad, right_curverad)
         cv2.putText(output_image, curv_text, (40, 70), text_font, 1, text_color, 2, cv2.LINE_AA)
         offset_text = 'Car offset: {:04.3f} m'.format(car_offset)
-        cv2.putText(output_image, offset_text, (40, 120), text_font, 1, text_color, 2, cv2.LINE_AA)
-        #plt.imshow(result)        
+        cv2.putText(output_image, offset_text, (40, 120), text_font, 1, text_color, 2, cv2.LINE_AA)      
         return output_image
 
        
@@ -635,24 +634,19 @@ class C_LaneLine_t:
         if (not self.working) or (self.need_reset) :
             left_right_pixels = self.hist_detect_lane(warped_image)
         else :
-            #print(self.left_fit)
-            #print(self.right_fit)
-            #left_right_pixels = self.hist_detect_lane(warped_image)
             left_right_pixels = self.hist_detect_lane_with_filter(warped_image, self.left_fit, self.right_fit)
             
-        #left_fit_mean, right_fit_mean, left_fit_cr_mean, right_fit_cr_mean, left_curverad, right_curverad
         current_left_fix, current_right_fix = self.cal_parabola_pixels(image_size_x_y, left_right_pixels) 
         left_fit_mean, right_fit_mean, left_fit_cr_mean, right_fit_cr_mean, left_curverad, right_curverad = self.lane_line_postprocess(image_size_x_y, current_left_fix, current_right_fix)
+        
         if not self.working :
             return rgb_image                        
-        #print("abcc",left_curverad, right_curverad)
+        
         car_offset = self.cal_car_offset(image_size_x_y, left_fit_mean, right_fit_mean)
-        #argument_display(self, rgb_image, left_fit, right_fit, left_curverad, right_curverad, car_offset)
         output_image = self.argument_display(undist_image, left_fit_mean, right_fit_mean, left_curverad, right_curverad, car_offset)
     
         return output_image
-        
-        #return color_warped_image
+
         
     
 ################################################################################
@@ -688,12 +682,10 @@ def process_image():
         mpimg.imsave('output_images/test_images/binary_'+image_file_path.split('/')[-1], color_binary)
         warped_image, color_warped_image = lane_line.image_perspective(combined_binary)
         mpimg.imsave('output_images/test_images/warped_'+image_file_path.split('/')[-1], color_warped_image)
-        #left_right = lane_line.hist_detect_lane(warped_image)
         left_right = lane_line.identify_lane_line_convolution(warped_image)
         left_right_list.append(left_right)
         left_fit_mean, right_fit_mean, left_fit_cr_mean, right_fit_cr_mean, left_curverad, right_curverad = lane_line.cal_lane_line(image_size_x_y, left_right_list)                        
         car_offset = lane_line.cal_car_offset(image_size_x_y, left_fit_mean, right_fit_mean)
-        #argument_display(self, rgb_image, left_fit, right_fit, left_curverad, right_curverad, car_offset)
         output_image = lane_line.argument_display(undist_image, left_fit_mean, right_fit_mean, left_curverad, right_curverad, car_offset)
         mpimg.imsave('output_images/test_images/result_'+image_file_path.split('/')[-1], output_image)
   
@@ -716,7 +708,7 @@ def process_video():
     
     write_output = 'output_images/abc.mp4'
 
-    clip1 = VideoFileClip("project_video.mp4")
+    clip1 = VideoFileClip("challenge_video.mp4")
     white_clip = clip1.fl_image(lane_line.dectect_lane_line) #NOTE: this function expects color images!!
     white_clip.write_videofile(write_output, audio=False)
     

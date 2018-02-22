@@ -9,7 +9,7 @@ import pandas as pds
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from keras.models import Sequential
-from keras.layers.core import Dense, Activation, Flatten, Dropout
+from keras.layers.core import Dense, Activation, Flatten, Dropout, Lambda
 from keras.layers.convolutional import Conv2D, Cropping2D
 from keras.layers.pooling import MaxPooling2D
 from keras.callbacks import ModelCheckpoint
@@ -51,20 +51,20 @@ def image_preprocess(file_path):
     output channel (height, width, channels=3)
     '''
     # 1. load image
-    rgb_image = mpimg.imread(file_path.strip())
+    rgb_image = mpimg.imread('data/'+file_path.strip())
     # 2. turn image to gray
     #gray_image = cv2.cvtColor(origan_image, cv2.COLOR_BGR2GRAY)
     # 3. cropping image
-    cropped_image = _cropping_image(rgb_image)
+    #cropped_image = _cropping_image(rgb_image)
     # 4. resizing image 
-    resized_image = cv2.resize(cropped_image, (320, 108), interpolation=cv2.INTER_LINEAR)
+    #resized_image = cv2.resize(cropped_image, (320, 108), interpolation=cv2.INTER_LINEAR)
     # 5. normalize image
-    normalize_image = _normalize_image(resized_image)
+    #normalize_image = _normalize_image(resized_image)
     # 6. reshape
-    image_size = normalize_image.shape
-    reshape_image = np.reshape(normalize_image, (image_size[0], image_size[1], 3) )
+    #image_size = normalize_image.shape
+    #reshape_image = np.reshape(normalize_image, (image_size[0], image_size[1], 3) )
     #print(reshape_image.shape)
-    return reshape_image
+    return rgb_image
 
 
 def create_data_sample(csv_file, left_camera_compensation=0.1, right_camera_compensation=-0.1):
@@ -149,17 +149,19 @@ def create_keras_model(feature_shape):
     '''
     model = Sequential()
     
-    #
-    #model.add(Cropping2D(cropping=((70,20), (0,0)), input_shape=feature_shape)) 
+    # Cropping to 70x320x3
+    model.add(Cropping2D(cropping=((70,20), (0,0)), input_shape=feature_shape)) 
+    # Normalize data
+    model.add(Lambda(lambda x: x/255.0 - 0.5))
     # Layer Convolutional. Input = 320x108x3. Output = 158x52x24.
-    model.add(Conv2D(24, 5, 5, activation='relu', input_shape=feature_shape))
+    model.add(Conv2D(24, 5, 5, activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
     # Layer Convolutional. Input = 158x52x24. Output = 77x24x36.
     model.add(Conv2D(36, 5, 5, activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
     # Layer Convolutional. Input = 77x24x36. Output = 36x10x48.
-    model.add(Conv2D(48, 5, 5, activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
+    #model.add(Conv2D(48, 5, 5, activation='relu'))
+    #model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
     # Layer Convolutional. Input = 36x10x48. Output = 17x4x64.
     model.add(Conv2D(64, 3, 3, activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
@@ -169,7 +171,7 @@ def create_keras_model(feature_shape):
     # Layer Flatten. Input = 7x1x64. Output = 448.
     model.add(Flatten())
     # Layer Fully Connected. Input = 448. Output = 1164.
-    model.add(Dense(1164, activation='relu'))
+    model.add(Dense(1164, activation='relu'))#1164
     model.add(Dropout(0.5))
     # Layer Fully Connected. Input = 1164. Output = 100.
     model.add(Dense(100, activation='relu'))
@@ -190,7 +192,7 @@ def train_model():
     '''
     CarND-Behavioral-Cloning-P3
     '''
-    csv_file_path = 'driving_log.csv'
+    csv_file_path = 'data/driving_log.csv'
     batch_size = 80 
     #left_camera_compl = 0.2    # using default data
     #right_camera_compl = -0.2  # using default data
@@ -203,14 +205,14 @@ def train_model():
     vaild_data_generator = create_data_generator(vaild_features, vaild_lables, batch_size)
     
     # Create keras model
-    feature_shape=(108,320,3)
+    feature_shape=(160,320,3)
     bhvcln_model = create_keras_model(feature_shape)
     bhvcln_model.summary
     
     bhvcln_model.compile(optimizer='adam', loss='mse', metrics=['mae'])
     
     # Save every model using Keras checkpoint
-    checkpoint = ModelCheckpoint(filepath= "check-{epoch:02d}-{val_loss:.4f}.hdf5", verbose=1, save_best_only=False)
+    checkpoint = ModelCheckpoint(filepath= "outputs/check-{epoch:02d}-{val_loss:.4f}.hdf5", verbose=1, save_best_only=False)
     callbacks_list = [checkpoint]
                   
     # Train model

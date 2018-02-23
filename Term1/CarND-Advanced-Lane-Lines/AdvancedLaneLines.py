@@ -82,13 +82,19 @@ class C_LaneLine_t:
         self.check_fail_counter = 0
         
     def load_camera_parameter(self):
-        with open('calibrateCamera.pkl', 'rb') as f:
+        '''
+        load camera parameter from file using pickle
+        '''
+        with open('calibrate_camera.pkl', 'rb') as f:
             cal_pickle = pickle.load(f)
         self.camera_mtx = cal_pickle["mtx"]
         self.camera_dist = cal_pickle["dist"]
     
     
     def calc_m_mivs(self, src, dst):
+        '''
+        calculate the perspective transform matrix and inverse perspective transform matrix 
+        '''
         # Given src and dst points, calculate the perspective transform matrix
         self.perspect_matrix = cv2.getPerspectiveTransform(src, dst)
         self.ivs_perspect_matrix = cv2.getPerspectiveTransform(dst, src)   
@@ -97,7 +103,7 @@ class C_LaneLine_t:
     
     def image_undistort(self, rgb_image):
         '''
-        image undistortion
+        undistort image 
         '''
         if (self.camera_mtx == None) or (self.camera_dist == None) :
             print("camera parameter no initial yet")
@@ -107,13 +113,15 @@ class C_LaneLine_t:
 
                    
     def highlight_lane_line(self, rgb_image):
-        # Convert to HLS color space and separate the S channel
+        '''
+        output an binary image than contain pixels only relate to lane line
+        '''
         # Note: img is the undistorted image and in RGB format
         
-        # Find lane line on EGB color space
+        # Find lane line on RGB color space
         rgb_image_r_channel = rgb_image[:,:,0]
         rgb_image_g_channel = rgb_image[:,:,1]
-        rgb_image_v_channel = rgb_image[:,:,2]
+        rgb_image_b_channel = rgb_image[:,:,2]
         
         # Detect lane line using R channel
         thresh_min = self.rgb_r_channel_thresh[0]
@@ -147,7 +155,7 @@ class C_LaneLine_t:
         sobelx_hls_l_channel_image = cv2.Sobel(hls_image_l_channel, cv2.CV_64F, 1, 0)
         # Absolute x derivative to accentuate lines away from horizontal
         abs_sobelx_hls_l_channel_image = np.absolute(sobelx_hls_l_channel_image) 
-        # Scale iamge
+        # Scale image
         scaled_sobelx_hls_l_channel_image = np.uint8(255*abs_sobelx_hls_l_channel_image /np.max(abs_sobelx_hls_l_channel_image))
         # Threshold x gradient
         thresh_min = self.sobelx_hls_l_channel_thresh[0]
@@ -162,7 +170,7 @@ class C_LaneLine_t:
         sobelx_gray_image = cv2.Sobel(gray_image, cv2.CV_64F, 1, 0)
         # Absolute x derivative to accentuate lines away from horizontal
         abs_sobelx_gray_image = np.absolute(sobelx_gray_image) 
-        # Scale iamge
+        # Scale image
         scaled_sobelx_gray_image = np.uint8(255*abs_sobelx_gray_image / np.max(abs_sobelx_gray_image))
         # Threshold x gradient
         thresh_min = self.sobelx_gray_thresh[0]
@@ -173,7 +181,7 @@ class C_LaneLine_t:
         sobely_gray_image = cv2.Sobel(gray_image, cv2.CV_64F, 0, 1)
         # Absolute x derivative to accentuate lines away from horizontal
         abs_sobely_gray_image = np.absolute(sobely_gray_image) 
-        # Scale iamge
+        # Scale image
         scaled_sobely_gray_image = np.uint8(255*abs_sobely_gray_image / np.max(abs_sobely_gray_image))
         # Threshold x gradient
         thresh_min = self.sobely_gray_thresh[0]
@@ -220,12 +228,13 @@ class C_LaneLine_t:
 
     
     def image_perspective(self, binary_img):
-        img_size = (binary_img.shape[1], binary_img.shape[0])  
-        #cv2.line(binary_img, (565, 460), (725, 460), (0, 0, 255), thickness=10)  
-        #cv2.line(binary_img, (565, 460), (130, 720), (0, 0, 255), thickness=10)    
-        #cv2.line(binary_img, (1250, 720), (725, 460), (0, 0, 255), thickness=10)         
+        '''
+        image perspective transform
+        '''
+        img_size = (binary_img.shape[1], binary_img.shape[0])        
         # Warp the image using OpenCV warpPerspective()
         warped_image = cv2.warpPerspective(binary_img, self.perspect_matrix, img_size)
+        # mask on ROI
         warped_image[ : , 0:400] = 0
         warped_image[ : , 1080:1280] = 0
         color_warped_image = np.dstack((warped_image, warped_image, warped_image)) * 255
@@ -235,6 +244,9 @@ class C_LaneLine_t:
         
         
     def hist_detect_lane(self, binary_warped):
+        '''
+        calculate all the pixels belong to lane line without forward filter
+        '''
         # Assuming have created a warped binary image called "binary_warped"
         # Take a histogram of the bottom half of the image
         histogram = np.sum(binary_warped[np.int(binary_warped.shape[0]/2):,:], axis=0)   
@@ -301,9 +313,11 @@ class C_LaneLine_t:
   
   
     def hist_detect_lane_with_filter(self, binary_warped, left_fit, right_fit):
-        
+        '''
+        calculate all the pixels belong to lane line with forward filter
+        '''
         image_size_x_y = (binary_warped.shape[1], binary_warped.shape[0]) 
-
+        # pridect leftx_current and rightx_current with the fit data of last step
         lift_line_postion = left_fit[0]*image_size_x_y[1]**2 + left_fit[1]*image_size_x_y[1] + left_fit[2]
         right_line_postion = right_fit[0]*image_size_x_y[1]**2 + right_fit[1]*image_size_x_y[1] + right_fit[2]
         leftx_current = lift_line_postion
@@ -361,85 +375,7 @@ class C_LaneLine_t:
         righty = nonzeroy[right_lane_inds] 
         
         return (leftx, lefty, rightx, righty)
-    
-    def find_window_centroids(self, image, window_width, window_height, margin):
-    
-        window_centroids = [] # Store the (left,right) window centroid positions per level
-        window = np.ones(window_width) # Create our window template that we will use for convolutions
-    
-        # First find the two starting positions for the left and right lane by using np.sum to get the vertical image slice
-        # and then np.convolve the vertical image slice with the window template 
-    
-        # Sum quarter bottom of image to get slice, could use a different ratio
-        l_sum = np.sum(image[int(image.shape[0]*3/4):, :int(image.shape[1]/2)], axis=0)
-        l_center = np.argmax(np.convolve(window,l_sum))-window_width/2
-        r_sum = np.sum(image[int(image.shape[0]*3/4):, int(image.shape[1]/2):], axis=0)
-        r_center = np.argmax(np.convolve(window,r_sum))-window_width/2+int(image.shape[1]/2)
-    
-        # Add what we found for the first layer
-        window_centroids.append((l_center,r_center))
-    
-        # Go through each layer looking for max pixel locations
-        for level in range(1,(int)(image.shape[0]/window_height)):
-            # convolve the window into the vertical slice of the image
-            image_layer = np.sum(image[int(image.shape[0]-(level+1)*window_height): int(image.shape[0]-level*window_height), : ], axis=0)
-            conv_signal = np.convolve(window, image_layer)
-            # Find the best left centroid by using past left center as a reference
-            # Use window_width/2 as offset because convolution signal reference is at right side of window, not center of window
-            offset = window_width/2
-            l_min_index = int(max(l_center+offset-margin,0))
-            l_max_index = int(min(l_center+offset+margin,image.shape[1]))
-            l_center = np.argmax(conv_signal[l_min_index:l_max_index])+l_min_index-offset
-            # Find the best right centroid by using past right center as a reference
-            r_min_index = int(max(r_center+offset-margin,0))
-            r_max_index = int(min(r_center+offset+margin,image.shape[1]))
-            r_center = np.argmax(conv_signal[r_min_index:r_max_index])+r_min_index-offset
-            # Add what we found for that layer
-            window_centroids.append((l_center,r_center))
-        return window_centroids
- 
-    def window_mask(self, width, height, img_ref, center, level):
-        output = np.zeros_like(img_ref)
-        output[int(img_ref.shape[0]-(level+1)*height):int(img_ref.shape[0]-level*height),max(0,int(center-width/2)):min(int(center+width/2),img_ref.shape[1])] = 1
-        return output
-               
-    def identify_lane_line_convolution(self, binary_warped):
-        # window settings
-        window_width = 50 
-        window_height = 80 # Break image into 9 vertical layers since image height is 720
-        margin = 100 # How much to slide left and right for searching
-
-        window_centroids = self.find_window_centroids(binary_warped, window_width, window_height, margin)
-
-        leftx = lefty = rightx = righty = None
-
-        # If we found any window centers
-        if len(window_centroids) > 0:
-
-            # Points used to draw all the left and right windows
-            l_points = np.zeros_like(binary_warped)
-            r_points = np.zeros_like(binary_warped)
-
-            # Go through each level and draw the windows 	
-            for level in range(0,len(window_centroids)):
-                # Window_mask is a function to draw window areas
-	            l_mask = self.window_mask(window_width, window_height, binary_warped, window_centroids[level][0], level)
-	            r_mask = self.window_mask(window_width, window_height, binary_warped, window_centroids[level][1], level)
-	            # Add graphic points from window mask here to total pixels found 
-	            l_points[(l_points == 255) | ((l_mask == 1) ) ] = 255
-	            r_points[(r_points == 255) | ((r_mask == 1) ) ] = 255
-
-            nonzero_pionts_left = l_points.nonzero()
-            lefty = np.array(nonzero_pionts_left[0])
-            leftx = np.array(nonzero_pionts_left[1])
-
-            nonzero_pionts_right = r_points.nonzero()
-            righty = np.array(nonzero_pionts_right[0])
-            rightx = np.array(nonzero_pionts_right[1])
-
-        return (leftx, lefty, rightx, righty)
-    
-    
+        
     def convert_to_meter(self, parabola_coefficients) :
         '''
         Once the parabola coefficients are obtained, in pixels, convert them into meters. 
@@ -450,75 +386,88 @@ class C_LaneLine_t:
         return (self.xm_per_pix / self.ym_per_pix**2 * parabola_coefficients[0], self.xm_per_pix / self.ym_per_pix * parabola_coefficients[1], self.xm_per_pix * parabola_coefficients[2] )
     
     def cal_parabola_pixels(self, image_size_x_y, left_right_pixels) :
-        
+        '''
+        calculate parabola coefficients in pixels, if input data lenght is zero, return an empty data
+        '''
         leftx = left_right_pixels[0]
         lefty = left_right_pixels[1]
         rightx = left_right_pixels[2]
         righty = left_right_pixels[3]
-
+        
         if (len(leftx)>0) and (len(lefty)>0) and (len(rightx)>0) and (len(righty)>0) : 
-            
+            # succeed detecting lane line
             self.detected = True
+            # calculate left lane line parabola coefficients
             left_fit = np.polyfit(lefty, leftx, 2) 
+            # calculate right lane line parabola coefficients
             right_fit = np.polyfit(righty, rightx, 2)
             return left_fit, right_fit
         else : 
+            # fail to detect lane line
             self.detected = False
             left_fit = ()
             right_fit = ()
             return left_fit, right_fit
             
     def lane_line_postprocess(self, image_size_x_y, left_fit, right_fit) :
-        #Sanity Check
         '''
+        Lane line postprocess for video
         Checking that they have similar curvature
         Checking that they are separated by approximately the right distance horizontally
         Checking that they are roughly parallel
         '''
         if self.detected :
             if self.working :
+                # succeed detecting lane line and in working state
+                # covert new fit data from pixels to meter
                 left_fit_meter = self.convert_to_meter(left_fit)
                 right_fit_meter = self.convert_to_meter(right_fit)
-                # Calculate the new rad of curvature
+                # Calculate the new rad of curvature in meter
                 left_curverad = ((1 + (2*left_fit_meter[0]*image_size_x_y[1]*self.ym_per_pix + left_fit_meter[1])**2)**1.5) / np.absolute(2*left_fit_meter[0])
                 right_curverad = ((1 + (2*right_fit_meter[0]*image_size_x_y[1]*self.ym_per_pix + right_fit_meter[1])**2)**1.5) / np.absolute(2*right_fit_meter[0])
-                if (np.absolute(left_curverad-right_curverad) < 1000) and (np.absolute((right_fit_meter[2]-self.lane_line_center) - (self.lane_line_center-left_fit_meter[2]))<1) :
-                    if len(self.left_fit_list) < 10 :
+                # check the left and right lane line have similar curvature and separated approximately
+                if (np.absolute(left_curverad-right_curverad) < 1500) and (np.absolute((right_fit_meter[2]-self.lane_line_center) - (self.lane_line_center-left_fit_meter[2]))<1) :
+                    # if pass check add new fit data to list and keep the list only contain last 10 data 
+                    # for left
+                    if len(self.left_fit_list) < 5 :
                         self.left_fit_list.append(left_fit)
                     else :
                         temp_list = self.left_fit_list[1:]
                         temp_list.append(left_fit)
                         self.left_fit_list = temp_list
-                    if len(self.right_fit_list) < 10 :
+                    # for right
+                    if len(self.right_fit_list) < 5 :
                         self.right_fit_list.append(right_fit)
                     else :
                         temp_list = self.right_fit_list[1:]
                         temp_list.append(right_fit)
                         self.right_fit_list = temp_list       
                 else :
+                    # if not pass check, drop the data, and thought that we did not receive any data
                     self.check_fail_counter += 1
                     self.detected  = False
             else :
-                self.working = True
+                # if working state is false, meaning this is the first frame
                 left_fit_meter = self.convert_to_meter(left_fit)
                 right_fit_meter = self.convert_to_meter(right_fit)
                 # Calculate the new rad of curvature
                 left_curverad = ((1 + (2*left_fit_meter[0]*image_size_x_y[1]*self.ym_per_pix + left_fit_meter[1])**2)**1.5) / np.absolute(2*left_fit_meter[0])
                 right_curverad = ((1 + (2*right_fit_meter[0]*image_size_x_y[1]*self.ym_per_pix + right_fit_meter[1])**2)**1.5) / np.absolute(2*right_fit_meter[0])
-                #self.left_fit = left_fit
-                #self.right_fit = right_fit
-                #self.lane_line_center = (left_fit_meter[2] + right_fit_meter[2]) / 2.0
-                self.left_fit_list = []
-                self.right_fit_list = []
-                self.left_fit_list.append(left_fit)
-                self.right_fit_list.append(right_fit)
+                # check Sanity
                 if (np.absolute(left_curverad-right_curverad) < 1500) :
                     self.detected = False
+                #note that we succeed detecting lane line pixels, so we change working state to true, and initialize the fit data list   
+                if self.detected :
+                    self.working = True
+                    self.left_fit_list = []
+                    self.right_fit_list = []
+                    self.left_fit_list.append(left_fit)
+                    self.right_fit_list.append(right_fit)
                     
-        #Reset
+        # if too many frame fail to detect lane line, we Reset the pipeline 
         if not self.detected :
             self.failed_detected_counter += 1
-            if self.failed_detected_counter > 6 : 
+            if self.failed_detected_counter > 7 : 
                 self.failed_detected_counter = 0
                 self.working  = False
                 self.need_reset = True
@@ -527,7 +476,8 @@ class C_LaneLine_t:
             self.failed_detected_counter = 0
             self.need_reset = False
             self.check_fail_counter = 0
-            
+        
+        # show some information for monitor pipeline
         print('self.failed_detected_counter', self.failed_detected_counter)
         print('self.working', self.working)
         print('self.need_reset', self.need_reset)
@@ -545,6 +495,7 @@ class C_LaneLine_t:
         left_curverad = None
         right_curverad = None 
         
+        # if pipeline is not working, return empty data, the data need to same size as normal returns
         if (not self.working) :
             return left_fit_mean, right_fit_mean, left_fit_meter_mean, right_fit_meter_mean, left_curverad, right_curverad    
               
@@ -567,6 +518,7 @@ class C_LaneLine_t:
                 fit_2_sum += right_fit[2]
             right_fit_mean = (fit_0_sum/len(self.right_fit_list), fit_1_sum/len(self.right_fit_list), fit_2_sum/len(self.right_fit_list)) 
         
+        # update fit data with smoothing data
         self.left_fit = left_fit_mean
         self.right_fit = right_fit_mean
         
@@ -585,17 +537,26 @@ class C_LaneLine_t:
     
         return left_fit_mean, right_fit_mean, left_fit_meter_mean, right_fit_meter_mean, left_curverad, right_curverad
         
+        
     def cal_car_offset(self, image_size_x_y, left_fit, right_fit): 
+        '''
+        calculate car offset from lane line center
+        '''
         lift_line_postion = left_fit[0]*image_size_x_y[1]**2 + left_fit[1]*image_size_x_y[0] + left_fit[2]
         right_line_postion = right_fit[0]*image_size_x_y[1]**2 + right_fit[1]*image_size_x_y[0] + right_fit[2]
         lane_center_postion = (lift_line_postion + right_line_postion) / 2
         camera_center = image_size_x_y[0]/2
+        # assuming the camera just fixed at the center of the car
         car_center = camera_center
         car_offset = (car_center - lane_center_postion) * self.xm_per_pix
         return car_offset 
         
         
-    def argument_display(self, rgb_image, left_fit, right_fit, left_curverad, right_curverad, car_offset) :
+    def augmented_display(self, rgb_image, left_fit, right_fit, left_curverad, right_curverad, car_offset) :
+        '''
+        augmented display, add additional information on the road
+        '''
+        # display lane line area
         # Define conversions in x and y from pixels space to meters
         ploty = np.linspace(0, 700, num=700)# to cover same y-range as image  
         # Fit a second order polynomial to pixel positions in each fake lane line
@@ -611,39 +572,51 @@ class C_LaneLine_t:
         # Draw the lane onto the warped blank image
         cv2.fillPoly(color_warp, np.int_([pts]), (0,255, 0))
         # Warp the blank back to original image space using inverse perspective matrix (Minv)
-        #print()
+ 
         newwarp = cv2.warpPerspective(color_warp, self.ivs_perspect_matrix, (rgb_image.shape[1], rgb_image.shape[0])) 
         # Combine the result with the original image
-        output_image = cv2.addWeighted(rgb_image, 1, newwarp, 0.3, 0)   
-  
+        output_image = cv2.addWeighted(rgb_image, 1, newwarp, 0.3, 0)  
+        
+        # display lane line curve radius and car offset
         text_font = cv2.FONT_HERSHEY_DUPLEX
         text_color = (255, 255, 255)
         curv_text = 'Curve radius left: {0:04.2f} m right: {1:04.2f} m'.format(left_curverad, right_curverad)
         cv2.putText(output_image, curv_text, (40, 70), text_font, 1, text_color, 2, cv2.LINE_AA)
         offset_text = 'Car offset: {:04.3f} m'.format(car_offset)
-        cv2.putText(output_image, offset_text, (40, 120), text_font, 1, text_color, 2, cv2.LINE_AA)      
+        cv2.putText(output_image, offset_text, (40, 120), text_font, 1, text_color, 2, cv2.LINE_AA)  
+        
         return output_image
 
        
     def dectect_lane_line(self, rgb_image):
-        image_size_x_y = (rgb_image.shape[1], rgb_image.shape[0])       
+        '''
+        pipeline used for video
+        '''
+        image_size_x_y = (rgb_image.shape[1], rgb_image.shape[0])      
+        # undistort image
         undist_image = self.image_undistort(rgb_image)   
+        # lane line binary image
         combined_binary, color_binary = self.highlight_lane_line(undist_image)
+        # perspective transform 
         warped_image, color_warped_image = self.image_perspective(combined_binary)
+        # calculate pixels index 
         left_right_pixels = None                
         if (not self.working) or (self.need_reset) :
+            # use hist_detect_lane if reset or first frame
             left_right_pixels = self.hist_detect_lane(warped_image)
         else :
+            # use hist_detect_lane_with_filter in normal state
             left_right_pixels = self.hist_detect_lane_with_filter(warped_image, self.left_fit, self.right_fit)
-            
-        current_left_fix, current_right_fix = self.cal_parabola_pixels(image_size_x_y, left_right_pixels) 
-        left_fit_mean, right_fit_mean, left_fit_cr_mean, right_fit_cr_mean, left_curverad, right_curverad = self.lane_line_postprocess(image_size_x_y, current_left_fix, current_right_fix)
-        
+        # calculate  parabola coefficients of left and right lane line in pixels    
+        current_left_fit, current_right_fit = self.cal_parabola_pixels(image_size_x_y, left_right_pixels) 
+        # post process sanity check, smoothing etc...
+        left_fit_mean, right_fit_mean, left_fit_cr_mean, right_fit_cr_mean, left_curverad, right_curverad = self.lane_line_postprocess(image_size_x_y, current_left_fit, current_right_fit)
+        # if pipeline not working return original image
         if not self.working :
             return rgb_image                        
-        
+        # if pipeline working return augmented image
         car_offset = self.cal_car_offset(image_size_x_y, left_fit_mean, right_fit_mean)
-        output_image = self.argument_display(undist_image, left_fit_mean, right_fit_mean, left_curverad, right_curverad, car_offset)
+        output_image = self.augmented_display(undist_image, left_fit_mean, right_fit_mean, left_curverad, right_curverad, car_offset)
     
         return output_image
 
@@ -654,11 +627,11 @@ class C_LaneLine_t:
  
                  
 def process_image():
-    
+    # collect all images
     images = glob.glob('test_images/test*.jpg')
     print(len(images))
-
-    src = np.float32([[565, 460],
+    # perspective transform data
+    src = np.float32([[566, 460],
                       [715, 460],
                       [1150, 720],
                       [130, 720]])                    
@@ -666,34 +639,54 @@ def process_image():
                       [950,0],
                       [950,720],
                       [440, 720]])  
-                      
+    # ceate an object                  
     lane_line = C_LaneLine_t()
+    # load camera parameter
     lane_line.load_camera_parameter()
+    # calculate perspective transform matrix
     lane_line.calc_m_mivs(src, dst)
-    
+    # process images
     for image_file_path in images:
         # Read in an image
         left_right_list = []
-        rgb_image = mpimg.imread(image_file_path) 
-        image_size_x_y = (rgb_image.shape[1], rgb_image.shape[0])       
+        bgr_image = cv2.imread(image_file_path.strip()) 
+        rgb_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
+        image_size_x_y = (rgb_image.shape[1], rgb_image.shape[0])  
+        # undstort image
         undist_image = lane_line.image_undistort(rgb_image)
-        mpimg.imsave('output_images/test_images/undist_'+image_file_path.split('/')[-1], undist_image)        
+        bgr_undist_image = cv2.cvtColor(undist_image, cv2.COLOR_RGB2BGR)
+        cv2.imwrite('output_images/test_images/undist_'+image_file_path.split('/')[-1], bgr_undist_image)  
+        # highlight_lane_line
         combined_binary, color_binary = lane_line.highlight_lane_line(undist_image)
-        mpimg.imsave('output_images/test_images/binary_'+image_file_path.split('/')[-1], color_binary)
+        bgr_color_binary = cv2.cvtColor(color_binary, cv2.COLOR_RGB2BGR)
+        cv2.imwrite('output_images/test_images/binary_'+image_file_path.split('/')[-1], bgr_color_binary)  
+        # perspective transform
         warped_image, color_warped_image = lane_line.image_perspective(combined_binary)
-        mpimg.imsave('output_images/test_images/warped_'+image_file_path.split('/')[-1], color_warped_image)
-        left_right = lane_line.identify_lane_line_convolution(warped_image)
-        left_right_list.append(left_right)
-        left_fit_mean, right_fit_mean, left_fit_cr_mean, right_fit_cr_mean, left_curverad, right_curverad = lane_line.cal_lane_line(image_size_x_y, left_right_list)                        
-        car_offset = lane_line.cal_car_offset(image_size_x_y, left_fit_mean, right_fit_mean)
-        output_image = lane_line.argument_display(undist_image, left_fit_mean, right_fit_mean, left_curverad, right_curverad, car_offset)
-        mpimg.imsave('output_images/test_images/result_'+image_file_path.split('/')[-1], output_image)
+        bgr_color_warped_image = cv2.cvtColor(color_warped_image, cv2.COLOR_RGB2BGR)
+        cv2.imwrite('output_images/test_images/warped_'+image_file_path.split('/')[-1], bgr_color_warped_image)  
+        # calculate pixels index 
+        left_right_pixels = lane_line.hist_detect_lane(warped_image)
+        # calculate left_fit, right_fit
+        left_fit, right_fit = lane_line.cal_parabola_pixels(image_size_x_y, left_right_pixels) 
+        # convert to meter
+        left_fit_meter = lane_line.convert_to_meter(left_fit)
+        right_fit_meter = lane_line.convert_to_meter(right_fit)
+        # calculate left_curverad and right_curverad
+        left_curverad = ((1 + (2*left_fit_meter[0]*image_size_x_y[1]*lane_line.ym_per_pix + left_fit_meter[1])**2)**1.5) / np.absolute(2*left_fit_meter[0])
+        right_curverad = ((1 + (2*right_fit_meter[0]*image_size_x_y[1]*lane_line.ym_per_pix + right_fit_meter[1])**2)**1.5) / np.absolute(2*right_fit_meter[0])    
+        # calculate car_offset
+        car_offset = lane_line.cal_car_offset(image_size_x_y, left_fit, right_fit)
+        # augmented display
+        output_image = lane_line.augmented_display(undist_image, left_fit, right_fit, left_curverad, right_curverad, car_offset)
+        # save image
+        bgr_output_image = cv2.cvtColor(output_image, cv2.COLOR_RGB2BGR)
+        cv2.imwrite('output_images/test_images/result_'+image_file_path.split('/')[-1], bgr_output_image)  
   
                 
 def process_video():
     
-       
-    src = np.float32([[565, 460],
+    # perspective transform data   
+    src = np.float32([[566, 460],
                       [715, 460],
                       [1150, 720],
                       [130, 720]])                    
@@ -702,17 +695,19 @@ def process_video():
                       [950,720],
                       [440, 720]]) 
              
+    # ceate an object                  
     lane_line = C_LaneLine_t()
+    # load camera parameter
     lane_line.load_camera_parameter()
+    # calculate perspective transform matrix
     lane_line.calc_m_mivs(src, dst)
     
-    write_output = 'output_images/abc.mp4'
-
-    clip1 = VideoFileClip("challenge_video.mp4")
+    # video process
+    write_output = 'writeup_images/project_video.mp4'
+    clip1 = VideoFileClip("project_video.mp4")
     white_clip = clip1.fl_image(lane_line.dectect_lane_line) #NOTE: this function expects color images!!
     white_clip.write_videofile(write_output, audio=False)
-    
-
+ 
 
 def run() :
     #process_image()

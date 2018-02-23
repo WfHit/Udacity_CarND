@@ -21,7 +21,7 @@ The goals / steps of this project are the following:
 [undistorted_road]: ./writeup_images/undistorted_road.jpg "undistorted_road"
 [binary_road]: ./writeup_images/binary_road.jpg "binary_road"
 [warped_road]: ./writeup_images/warped_road.jpg "warped_road"
-[result_road]: ./writeup_images/color_fit_lines.jpg "result_road"
+[result_road]: ./writeup_images/result_road.jpg "result_road"
 [project_video]: ./writeup_images/project_video.mp4 "project_video"
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
@@ -103,7 +103,7 @@ The code for calculated the vehicle includes a function called `cal_car_offset()
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step in lines # through # in my code in `AdvancedLaneLines.py` in the function `augmented_display()`.  Here is an example of my result on a test image:
+I implemented this step in lines 555 through 588 in my code in `AdvancedLaneLines.py` in the function `augmented_display()`.  Here is an example of my result on a test image:
 
 ![alt text][result_road]
 
@@ -113,7 +113,7 @@ I implemented this step in lines # through # in my code in `AdvancedLaneLines.py
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result in address ./writeup_images](./writeup_images/project_video.mp4)
+Here's a [link to my video result in folder ./writeup_images](./writeup_images/project_video.mp4)
 
 ---
 

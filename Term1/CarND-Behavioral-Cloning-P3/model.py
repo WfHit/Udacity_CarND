@@ -13,57 +13,19 @@ from keras.layers.core import Dense, Activation, Flatten, Dropout, Lambda
 from keras.layers.convolutional import Conv2D, Cropping2D
 from keras.layers.pooling import MaxPooling2D
 from keras.callbacks import ModelCheckpoint
+#from keras.utils.visualize_util import plot
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 
 
-def _normalize_image(image_data):
-    """
-    Normalize the image data with Min-Max scaling to a range of [-0.5, 0.5]
-    :param image_data: The image data to be normalized
-    :return: Normalized image data
-    """
-    a = -0.5
-    b = 0.5
-    image_min = 0
-    image_max = 255
-    image_data.astype(float)
-    return a + ( ( (image_data - image_min)*(b - a) )/( image_max - image_min ) )
-
-def _cropping_image(image_data):
-    """
-    70 rows pixels from the top of the image
-    20 rows pixels from the bottom of the image
-    0 columns of pixels from the left of the image
-    0 columns of pixels from the right of the image
-    channel type = (height, width, channels)
-    """
-    img_roi_x      = 70  
-    img_roi_y      = 0  
-    img_roi_height = image_data.shape[0] - 70 - 20
-    img_roi_width  = image_data.shape[1]                                                                       
-    return image_data[img_roi_x:(img_roi_x+img_roi_height),img_roi_y:(img_roi_y+img_roi_width)]
-
-
-def image_preprocess(file_path):
+def image_load(file_path):
     '''
     load and process image in a pipeline
     output channel (height, width, channels=3)
     '''
-    # 1. load image
-    rgb_image = mpimg.imread('data/'+file_path.strip())
-    # 2. turn image to gray
-    #gray_image = cv2.cvtColor(origan_image, cv2.COLOR_BGR2GRAY)
-    # 3. cropping image
-    #cropped_image = _cropping_image(rgb_image)
-    # 4. resizing image 
-    #resized_image = cv2.resize(cropped_image, (320, 108), interpolation=cv2.INTER_LINEAR)
-    # 5. normalize image
-    #normalize_image = _normalize_image(resized_image)
-    # 6. reshape
-    #image_size = normalize_image.shape
-    #reshape_image = np.reshape(normalize_image, (image_size[0], image_size[1], 3) )
-    #print(reshape_image.shape)
+    # load image
+    bgr_image = cv2.imread('data/'+file_path.strip()) 
+    rgb_image = cv2.cvtColor(bgr_image, cv2.COLOR_BGR2RGB)
     return rgb_image
 
 
@@ -118,7 +80,7 @@ def create_data_generator(image_samples, steering_samples, batch_size, using_fli
             current_index = 0
         
         # Load and preprocess the image    
-        images_camera = image_preprocess(image_samples[current_index])
+        images_camera = image_load(image_samples[current_index])
         # Get the corresponding steering data
         steering_angle = steering_samples[current_index]
         
@@ -145,41 +107,38 @@ def create_data_generator(image_samples, steering_samples, batch_size, using_fli
             
 def create_keras_model(feature_shape):
     '''
-    create mode according nivida DAVE2
+    create mode according nivida DAVE-2
     '''
     model = Sequential()
     
     # Cropping to 70x320x3
     model.add(Cropping2D(cropping=((70,20), (0,0)), input_shape=feature_shape)) 
     # Normalize data
-    model.add(Lambda(lambda x: x/255.0 - 0.5))
-    # Layer Convolutional. Input = 320x108x3. Output = 158x52x24.
+    model.add(Lambda(lambda x: x/127.5 - 1.0))
+    # Layer Convolutional. 
     model.add(Conv2D(24, 5, 5, activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
-    # Layer Convolutional. Input = 158x52x24. Output = 77x24x36.
+    # Layer Convolutional. 
     model.add(Conv2D(36, 5, 5, activation='relu'))
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
-    # Layer Convolutional. Input = 77x24x36. Output = 36x10x48.
-    #model.add(Conv2D(48, 5, 5, activation='relu'))
+    # Layer Convolutional. 
+    model.add(Conv2D(48, 5, 5, activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
+    # Layer Convolutional. 
+    model.add(Conv2D(64, 3, 3, activation='relu'))
     #model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
-    # Layer Convolutional. Input = 36x10x48. Output = 17x4x64.
+    # Layer Convolutional. 
     model.add(Conv2D(64, 3, 3, activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
-    # Layer Convolutional. Input = 17x4x64. Output = 7x1x64
-    model.add(Conv2D(64, 3, 3, activation='relu'))
-    model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
-    # Layer Flatten. Input = 7x1x64. Output = 448.
+    #model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
+    # Layer Flatten. 
     model.add(Flatten())
-    # Layer Fully Connected. Input = 448. Output = 1164.
-    model.add(Dense(1164, activation='relu'))#1164
-    model.add(Dropout(0.5))
-    # Layer Fully Connected. Input = 1164. Output = 100.
+    # Layer Fully Connected. 
     model.add(Dense(100, activation='relu'))
     model.add(Dropout(0.5))
-    # Layer Fully Connected. Input = 100. Output = 50.
+    # Layer Fully Connected. 
     model.add(Dense(50, activation='relu'))
     model.add(Dropout(0.5))
-    # Layer Fully Connected. Input = 50. Output = 10.
+    # Layer Fully Connected. 
     model.add(Dense(10, activation='relu'))
     model.add(Dropout(0.5))
     # Layer Fully Connected. Linear
@@ -190,24 +149,25 @@ def create_keras_model(feature_shape):
     
 def train_model():
     '''
-    CarND-Behavioral-Cloning-P3
+    Training pipeline
     '''
     csv_file_path = 'data/driving_log.csv'
     batch_size = 80 
-    #left_camera_compl = 0.2    # using default data
-    #right_camera_compl = -0.2  # using default data
+    left_camera_compl = 0.5    # using default data
+    right_camera_compl = -0.5  # using default data
     
     # Create train data and valid data
-    train_features, vaild_features, train_labels, vaild_lables = create_data_sample(csv_file_path)
+    train_features, vaild_features, train_labels, vaild_lables = create_data_sample(csv_file_path, left_camera_compensation=left_camera_compl, right_camera_compensation=right_camera_compl)
     
     # Create train and valid data generator
     train_data_generator = create_data_generator(train_features, train_labels, batch_size)
     vaild_data_generator = create_data_generator(vaild_features, vaild_lables, batch_size)
     
-    # Create keras model
+    # Create model
     feature_shape=(160,320,3)
     bhvcln_model = create_keras_model(feature_shape)
     bhvcln_model.summary
+    #plot(bhvcln_model, to_file='model.png', show_shapes=True)
     
     bhvcln_model.compile(optimizer='adam', loss='mse', metrics=['mae'])
     
@@ -218,7 +178,7 @@ def train_model():
     # Train model
     history_object = bhvcln_model.fit_generator(generator=train_data_generator, \
                                                 samples_per_epoch=38400, \
-                                                nb_epoch=10, \
+                                                nb_epoch=5, \
                                                 verbose=1, \
                                                 callbacks=callbacks_list, \
                                                 validation_data=vaild_data_generator, \
@@ -231,7 +191,8 @@ def train_model():
     plt.title('model loss')
     plt.ylabel('loss')
     plt.xlabel('epoch')
-    plt.legend(['train', 'test'], loc='upper left')
+    plt.legend(['train', 'vaild'], loc='upper left')
+    #plt.legend(['train'], loc='upper left')
     plt.show()
     
     # Save mode

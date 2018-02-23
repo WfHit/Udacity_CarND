@@ -49,11 +49,11 @@ The model.py file contains the code for training and saving the convolution neur
 
 #### 1. An appropriate model architecture has been employed
 
-The first layer of my network is a Cropping2D layer which cut out top 70 rows and bottom 20 rows pixels of image(model.py lines 115) , then followed by a Lambda layer to normalize data(model.py lines 117) . And the next is 5 Conv2D layers with first three layers using 5x5 filter size and last two layers using 3x3 filter size, and all 5 Conv2D layers using RELU activation to intoduce nonlinearity(model.py lines 119-130) . After the 5 Conv2D layers is a Flatten layer(model.py lines 132). Last, 5 Fully Connected layer are added to the model after Flatten layer with RELU activation(model.py lines 134-146) . 
+The first layer of my network is a Cropping2D layer which cut out top 70 rows and bottom 20 rows pixels of image(model.py lines 115) , then followed by a Lambda layer to normalize data(model.py lines 117) . And the next is 5 Conv2D layers with first three layers using 5x5 filter size and last two layers using 3x3 filter size, and all 5 Conv2D layers using RELU activation to intoduce nonlinearity(model.py lines 119-130) . After the 5 Conv2D layers is a Flatten layer(model.py lines 132). Last, 4 Fully Connected layer are added to the model after Flatten layer with RELU activation(model.py lines 134-146) . 
 
 #### 2. Attempts to reduce overfitting in the model
 
-With the last 5 Fully Connected layer in the model, a dropout layer is added after each of the front four layer to reduce overfitting (model.py lines 135 138 141 144)
+With the last 5 Fully Connected layer in the model, a dropout layer is added after each of the front four layer to reduce overfitting (model.py lines 135 138 141)
 
 The model was trained and validated on different data sets to ensure that the model was not overfitting (model.py lines 32-65). The model was tested by running it through the simulator and ensuring that the vehicle could stay on the track.
 
@@ -63,7 +63,7 @@ The model used an adam optimizer, so the learning rate was not tuned manually (m
 
 #### 4. Appropriate training data
 
-Training data was chosen to keep the vehicle driving on the road. I use the data provided by udacity. 
+Training data was chosen to keep the vehicle driving on the road. I use the data provided by udacity, both left and right camera datas are added to training datas. 
 
 ### Architecture and Training Strategy
 
@@ -73,13 +73,13 @@ The overall strategy for deriving a model architecture was to reference an exist
 
 My first step was to use a convolution neural network model similar to the DAVE-2 I thought this model might be appropriate because nvidia designs it to slove this kind of problem on purpose.
 
-To build this model, first I read the parper which discribes the architecture, then I build a network with a Lambda layer to normalize data, 5 Conv2D layers using RELU, 5 Fully Connected layer using RELU and four dropout layer to reduce overfitting. In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I found that my first model can not run, beacuse it just consume all the resource of my GPU, so I add a Cropping2D layer which cut out top 70 rows and bottom 20 rows pixels of image on the one hand to reduce consumed resource and on the other hand to avoid unnecessary compution.
+To build this model, first I read the parper which discribes the architecture, then I build a network with a Lambda layer to normalize data, 5 Conv2D layers using RELU, 5 Fully Connected layer using RELU and four dropout layer to reduce overfitting. In order to gauge how well the model was working, I split my image and steering angle data into a training and validation set. I found that my first model can not run, beacuse it just consume all the resource of my GPU, so I add a Cropping2D layer which cut out top 70 rows and bottom 20 rows pixels of image on the one hand to reduce consumed resource and on the other hand to avoid unnecessary compution. After that it works well except that the car will leave the road at some turning place, so I increase the left and right camera compensation angle to 0.5, and slove this problem.
 
 At the end of the process, the vehicle is able to drive autonomously around the track without leaving the road.
 
 #### 2. Final Model Architecture
 
-The final model architecture (model.py lines 108-148) consisted of a convolution neural network with the following layers and layer sizes ...
+The final model architecture (model.py lines 108-145) consisted of a convolution neural network with the following layers:
 
 | Layer         		|     Description	        | 
 |:---------------------:|:-------------------------:| 

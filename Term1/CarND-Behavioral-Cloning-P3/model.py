@@ -126,10 +126,8 @@ def create_keras_model(feature_shape):
     model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
     # Layer Convolutional. 
     model.add(Conv2D(64, 3, 3, activation='relu'))
-    #model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
     # Layer Convolutional. 
     model.add(Conv2D(64, 3, 3, activation='relu'))
-    #model.add(MaxPooling2D(pool_size=(2, 2), strides=(2,2)))
     # Layer Flatten. 
     model.add(Flatten())
     # Layer Fully Connected. 

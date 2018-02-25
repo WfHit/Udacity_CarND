@@ -8,6 +8,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 from moviepy.editor import VideoFileClip
+from skimage.morphology import closing, opening, erosion, dilation, square
+
+#np.set_printoptions(threshold= 1e6)
 
 # Define a class to receive the characteristics of each line detection
 class C_LaneLine_t:
@@ -37,9 +40,9 @@ class C_LaneLine_t:
         #camera distortion dist
         self.camera_dist = None
         #threshold for h_channel
-        self.hls_h_channel_thresh = [15, 50]
+        self.hls_h_channel_thresh = [20, 40]
         #threshold for s_channel
-        self.hls_s_channel_thresh = [170, 255]
+        self.hls_s_channel_thresh = [180, 255]
         #threshold for b_channel
         self.lab_b_channel_thresh = [190, 255]
         #threshold for sobel x on gray image
@@ -61,7 +64,7 @@ class C_LaneLine_t:
         #meters per pixel in y dimension
         self.ym_per_pix = 30/720 
         #meters per pixel in x dimension
-        self.xm_per_pix = 3.7/700 
+        self.xm_per_pix = 3.7/470 
         #left fited parabola coefficients list
         self.left_fit_list = []
         #right fited parabola coefficients list
@@ -117,7 +120,7 @@ class C_LaneLine_t:
         output an binary image than contain pixels only relate to lane line
         '''
         # Note: img is the undistorted image and in RGB format
-        
+        '''
         # Find lane line on RGB color space
         rgb_image_r_channel = rgb_image[:,:,0]
         rgb_image_g_channel = rgb_image[:,:,1]
@@ -128,41 +131,49 @@ class C_LaneLine_t:
         thresh_max = self.rgb_r_channel_thresh[1]
         rgb_r_channel_binary_image = np.zeros_like(rgb_image_r_channel)
         rgb_r_channel_binary_image[(rgb_image_r_channel >= thresh_min) & (rgb_image_r_channel <= thresh_max)] = 1
-    
+        '''
         # Find lane line on HLS color space
         hls_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2HLS)
         hls_image_h_channel = hls_image[:,:,0]
         hls_image_l_channel = hls_image[:,:,1]
         hls_image_s_channel = hls_image[:,:,2] 
-        
-        # Detect lane line using S channel
-        thresh_min = self.hls_s_channel_thresh[0]
-        thresh_max = self.hls_s_channel_thresh[1]
-        hls_s_channel_binary_image = np.zeros_like(hls_image_s_channel)
-        hls_s_channel_binary_image[(hls_image_s_channel >= thresh_min) & (hls_image_s_channel <= thresh_max)] = 1
-        
+        '''
+        print('hls_image_h_channel_max:', np.max(hls_image_h_channel))
+        print('hls_image_h_channel_min:', np.min(hls_image_h_channel))
+        print('hls_image_l_channel_max:', np.max(hls_image_l_channel))
+        print('hls_image_l_channel_min:', np.min(hls_image_l_channel))
+        print('hls_image_s_channel_max:', np.max(hls_image_s_channel))
+        print('hls_image_s_channel_min:', np.min(hls_image_s_channel))
+        '''
         # Detect lane line using H channel
         thresh_min = self.hls_h_channel_thresh[0]
         thresh_max = self.hls_h_channel_thresh[1]
         hls_h_channel_binary_image = np.zeros_like(hls_image_h_channel)
         hls_h_channel_binary_image[(hls_image_h_channel >= thresh_min) & (hls_image_h_channel <= thresh_max)] = 1
-        
-        # Combine h & s channel 
-        #hs_channel_binary_image = np.zeros_like(image_s_channel)
-        #hs_channel_binary_image[(h_channel_binary_image == 1) | (s_channel_binary_image == 1)] = 1 
-        
+        '''
+        # Detect lane line using S channel
+        thresh_min = self.hls_s_channel_thresh[0]
+        thresh_max = self.hls_s_channel_thresh[1]
+        hls_s_channel_binary_image = np.zeros_like(hls_image_s_channel)
+        hls_s_channel_binary_image[(hls_image_s_channel >= thresh_min) & (hls_image_s_channel <= thresh_max)] = 1
+        '''
         # Detect lane line using sobel x on hls_l_channel_image       
         sobelx_hls_l_channel_image = cv2.Sobel(hls_image_l_channel, cv2.CV_64F, 1, 0)
         # Absolute x derivative to accentuate lines away from horizontal
         abs_sobelx_hls_l_channel_image = np.absolute(sobelx_hls_l_channel_image) 
+        #print(sobelx_hls_l_channel_image)
         # Scale image
         scaled_sobelx_hls_l_channel_image = np.uint8(255*abs_sobelx_hls_l_channel_image /np.max(abs_sobelx_hls_l_channel_image))
+        
         # Threshold x gradient
         thresh_min = self.sobelx_hls_l_channel_thresh[0]
         thresh_max = self.sobelx_hls_l_channel_thresh[1]
         sobelx_binary_hls_l_channel_image = np.zeros_like(scaled_sobelx_hls_l_channel_image)
         sobelx_binary_hls_l_channel_image[(scaled_sobelx_hls_l_channel_image >= thresh_min) & (scaled_sobelx_hls_l_channel_image <= thresh_max)] = 1  
         
+        #print('sobelx_binary_hls_l_channel_image_max:', np.max(scaled_sobelx_hls_l_channel_image))
+        #print('sobelx_binary_hls_l_channel_image_min:', np.min(scaled_sobelx_hls_l_channel_image))
+        '''
         # Find lane line on gray image 
         gray_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)     
         # Detect lane line using sobel x on gray image
@@ -176,25 +187,39 @@ class C_LaneLine_t:
         thresh_min = self.sobelx_gray_thresh[0]
         thresh_max = self.sobelx_gray_thresh[1]
         sobelx_binary_gray_image = np.zeros_like(scaled_sobelx_gray_image)
-        sobelx_binary_gray_image[(scaled_sobelx_gray_image >= thresh_min) & (scaled_sobelx_gray_image <= thresh_max)] = 1        
+        sobelx_binary_gray_image[(scaled_sobelx_gray_image >= thresh_min) & (scaled_sobelx_gray_image <= thresh_max)] = 1  
+        
+        #print('sobelx_gray_image_max:', np.max(sobelx_gray_image))
+        #print('sobelx_gray_image_min:', np.min(sobelx_gray_image))     
+        
         # Sobel y
         sobely_gray_image = cv2.Sobel(gray_image, cv2.CV_64F, 0, 1)
         # Absolute x derivative to accentuate lines away from horizontal
         abs_sobely_gray_image = np.absolute(sobely_gray_image) 
         # Scale image
         scaled_sobely_gray_image = np.uint8(255*abs_sobely_gray_image / np.max(abs_sobely_gray_image))
+        #print(scaled_sobely_gray_image)
         # Threshold x gradient
         thresh_min = self.sobely_gray_thresh[0]
         thresh_max = self.sobely_gray_thresh[1]
         sobely_binary_gray_image = np.zeros_like(scaled_sobely_gray_image)
         sobely_binary_gray_image[(scaled_sobely_gray_image >= thresh_min) & (scaled_sobely_gray_image <= thresh_max)] = 1        
+        
+        #print('sobely_gray_image_max:', np.max(sobely_gray_image))
+        #print('sobely_gray_image_min:', np.min(sobely_gray_image))    
+        
         # Sobel xy mag
         thresh_min = self.sobelxy_mag_gray_thresh[0]
         thresh_max = self.sobelxy_mag_gray_thresh[1]
         abs_sobelxy_mag_gray_image = np.sqrt(abs_sobelx_gray_image ** 2 + abs_sobely_gray_image ** 2)
         scaled_sobelxy_mag_gray_image = np.uint8(255*abs_sobelxy_mag_gray_image / np.max(abs_sobelxy_mag_gray_image))
+        #print(scaled_sobelxy_mag_gray_image)
         sobelxy_binary_mag_gray_image = np.zeros_like(scaled_sobelxy_mag_gray_image)
         sobelxy_binary_mag_gray_image[(scaled_sobelxy_mag_gray_image >= thresh_min) & (scaled_sobelxy_mag_gray_image <= thresh_max)] = 1
+        
+        #print('abs_sobelxy_mag_gray_image_max:', np.max(abs_sobelxy_mag_gray_image))
+        #print('abs_sobelxy_mag_gray_image_min:', np.min(abs_sobelxy_mag_gray_image))     
+        
         # Sobel xy dir
         thresh_min = self.sobelxy_dir_gray_thresh[0]
         thresh_max = self.sobelxy_dir_gray_thresh[1]
@@ -213,16 +238,15 @@ class C_LaneLine_t:
         thresh_max = self.lab_b_channel_thresh[1]
         lab_b_channel_binary_image = np.zeros_like(lab_image_b_channel)
         lab_b_channel_binary_image[(lab_image_b_channel >= thresh_min) & (lab_image_b_channel <= thresh_max)] = 1
-
+        '''
         # Combine the three binary thresholds
         combined_binary = np.zeros_like(hls_image_s_channel)
         #combined_binary[(h_channel_binary_image == 1) ] = 1 
-        combined_binary[((sobelx_binary_gray_image == 1) & (sobely_binary_gray_image == 1)) | \
-                    ((hls_s_channel_binary_image == 1) & (hls_h_channel_binary_image == 1)) | \
-                    (lab_b_channel_binary_image == 1) ] = 1 
+        combined_binary[(sobelx_binary_hls_l_channel_image == 1) | ( (hls_h_channel_binary_image == 1)) ] = 1
+        #combined_binary = lab_b_channel_binary_image
         # Stack each channel to view their individual contributions in red, green and blue respectively
         # This returns a stack of the three binary images, whose components you can see as different colors
-        color_binary = np.dstack((hls_s_channel_binary_image, sobelx_binary_gray_image, lab_b_channel_binary_image)) * 255 
+        color_binary = np.dstack((combined_binary, combined_binary, combined_binary))
         
         return combined_binary, color_binary
 
@@ -237,6 +261,12 @@ class C_LaneLine_t:
         # mask on ROI
         warped_image[ : , 0:400] = 0
         warped_image[ : , 1080:1280] = 0
+        # binary_closing
+        erosion_image = opening(warped_image, square(3))
+        #dilation_image = closing(erosion_image, square(3))
+        warped_image = erosion_image
+        # binary_opening
+        #open_warped_image = binary_opening(close_warped_image)
         color_warped_image = np.dstack((warped_image, warped_image, warped_image)) * 255
         #color_warped_image = warped_image * 255
         # Return the resulting image and matrix
@@ -249,7 +279,7 @@ class C_LaneLine_t:
         '''
         # Assuming have created a warped binary image called "binary_warped"
         # Take a histogram of the bottom half of the image
-        histogram = np.sum(binary_warped[np.int(binary_warped.shape[0]/2):,:], axis=0)   
+        histogram = np.sum(binary_warped[:,:], axis=0)   
         # Find the peak of the left and right halves of the histogram
         # These will be the starting point for the left and right lines
         midpoint = np.int(histogram.shape[0]/2)
@@ -257,7 +287,7 @@ class C_LaneLine_t:
         rightx_base = np.argmax(histogram[midpoint : ]) + midpoint
         
         # Choose the number of sliding windows
-        nwindows = 12
+        nwindows = 8
         # Set height of windows
         window_height = np.int(binary_warped.shape[0]/nwindows)
         # Identify the x and y positions of all nonzero pixels in the image
@@ -270,11 +300,11 @@ class C_LaneLine_t:
         # Set the width of the windows +/- margin
         margin = 100
         # Set minimum number of pixels found to recenter window
-        minpix = 30
+        minpix = 10
         # Create empty lists to receive left and right lane pixel indices
         left_lane_inds = []
         right_lane_inds = []
-       
+        color_window_image = np.dstack((binary_warped, binary_warped, binary_warped))*255
         # Step through the windows one by one
         for window in range(nwindows):
             # Identify window boundaries in x and y (and right and left)
@@ -296,8 +326,8 @@ class C_LaneLine_t:
             if len(good_right_inds) > minpix:        
                 rightx_current = np.int(np.mean(nonzerox[good_right_inds]))
             # Draw the windows on the visualization image
-            #cv2.rectangle(out_img,(win_xleft_low,win_y_low),(win_xleft_high,win_y_high), (0,255,0), 2) 
-            #cv2.rectangle(out_img,(win_xright_low,win_y_low),(win_xright_high,win_y_high), (0,255,0), 2) 
+            cv2.rectangle(color_window_image,(win_xleft_low,win_y_low),(win_xleft_high,win_y_high), (0,255,0), 2) 
+            cv2.rectangle(color_window_image,(win_xright_low,win_y_low),(win_xright_high,win_y_high), (0,255,0), 2) 
 
         # Concatenate the arrays of indices
         left_lane_inds = np.concatenate(left_lane_inds)
@@ -309,7 +339,7 @@ class C_LaneLine_t:
         rightx = nonzerox[right_lane_inds]
         righty = nonzeroy[right_lane_inds] 
 
-        return (leftx, lefty, rightx, righty)
+        return (leftx, lefty, rightx, righty), color_window_image
   
   
     def hist_detect_lane_with_filter(self, binary_warped, left_fit, right_fit):
@@ -317,14 +347,9 @@ class C_LaneLine_t:
         calculate all the pixels belong to lane line with forward filter
         '''
         image_size_x_y = (binary_warped.shape[1], binary_warped.shape[0]) 
-        # pridect leftx_current and rightx_current with the fit data of last step
-        lift_line_postion = left_fit[0]*image_size_x_y[1]**2 + left_fit[1]*image_size_x_y[1] + left_fit[2]
-        right_line_postion = right_fit[0]*image_size_x_y[1]**2 + right_fit[1]*image_size_x_y[1] + right_fit[2]
-        leftx_current = lift_line_postion
-        rightx_current = right_line_postion
         
         # Choose the number of sliding windows
-        nwindows = 12
+        nwindows = 8
         # Set height of windows
         window_height = np.int(binary_warped.shape[0]/nwindows)
         # Identify the x and y positions of all nonzero pixels in the image
@@ -333,22 +358,27 @@ class C_LaneLine_t:
         nonzerox = np.array(nonzero_pionts[1])
         
         # Set the width of the windows +/- margin
-        margin = 100
+        margin = 40
         # Set minimum number of pixels found to recenter window
-        minpix = 30
+        minpix = 10
         # Create empty lists to receive left and right lane pixel indices
         left_lane_inds = []
         right_lane_inds = []
-       
+        color_window_image = np.dstack((binary_warped, binary_warped, binary_warped))*255
         # Step through the windows one by one
         for window in range(nwindows):
+            win_y_low = int(binary_warped.shape[0] - (window+1)*window_height)
+            win_y_high = int(binary_warped.shape[0] - window*window_height)
+            # pridect leftx_current and rightx_current with the fit data of last step
+            lift_line_postion = left_fit[0]*win_y_high**2 + left_fit[1]*win_y_high + left_fit[2]
+            right_line_postion = right_fit[0]*win_y_high**2 + right_fit[1]*win_y_high + right_fit[2]
+            leftx_current = lift_line_postion
+            rightx_current = right_line_postion
             # Identify window boundaries in x and y (and right and left)
-            win_y_low = binary_warped.shape[0] - (window+1)*window_height
-            win_y_high = binary_warped.shape[0] - window*window_height
-            win_xleft_low = leftx_current - margin
-            win_xleft_high = leftx_current + margin
-            win_xright_low = rightx_current - margin
-            win_xright_high = rightx_current + margin
+            win_xleft_low = int(leftx_current - margin)
+            win_xleft_high = int(leftx_current + margin)
+            win_xright_low = int(rightx_current - margin)
+            win_xright_high = int(rightx_current + margin)
             # Identify the nonzero pixels in x and y within the window
             good_left_inds = ( (nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xleft_low) & (nonzerox < win_xleft_high) ).nonzero()[0]
             good_right_inds = ( (nonzeroy >= win_y_low) & (nonzeroy < win_y_high) & (nonzerox >= win_xright_low) & (nonzerox < win_xright_high) ).nonzero()[0]
@@ -361,8 +391,8 @@ class C_LaneLine_t:
             if len(good_right_inds) > minpix:        
                 rightx_current = np.int(np.mean(nonzerox[good_right_inds]))
             # Draw the windows on the visualization image
-            #cv2.rectangle(out_img,(win_xleft_low,win_y_low),(win_xleft_high,win_y_high), (0,255,0), 2) 
-            #cv2.rectangle(out_img,(win_xright_low,win_y_low),(win_xright_high,win_y_high), (0,255,0), 2) 
+            cv2.rectangle(color_window_image,(win_xleft_low,win_y_low),(win_xleft_high,win_y_high), (0,255,0), 2) 
+            cv2.rectangle(color_window_image,(win_xright_low,win_y_low),(win_xright_high,win_y_high), (0,255,0), 2) 
 
         # Concatenate the arrays of indices
         left_lane_inds = np.concatenate(left_lane_inds)
@@ -374,7 +404,7 @@ class C_LaneLine_t:
         rightx = nonzerox[right_lane_inds]
         righty = nonzeroy[right_lane_inds] 
         
-        return (leftx, lefty, rightx, righty)
+        return (leftx, lefty, rightx, righty), color_window_image
         
     def convert_to_meter(self, parabola_coefficients) :
         '''
@@ -416,37 +446,40 @@ class C_LaneLine_t:
         Checking that they are separated by approximately the right distance horizontally
         Checking that they are roughly parallel
         '''
+        left_fit_mean = None
+        right_fit_mean = None
+        left_fit_meter_mean = None
+        right_fit_meter_mean = None
+        left_curverad = None
+        right_curverad = None 
         if self.detected :
             if self.working :
                 # succeed detecting lane line and in working state
                 # covert new fit data from pixels to meter
+                '''
                 left_fit_meter = self.convert_to_meter(left_fit)
                 right_fit_meter = self.convert_to_meter(right_fit)
                 # Calculate the new rad of curvature in meter
                 left_curverad = ((1 + (2*left_fit_meter[0]*image_size_x_y[1]*self.ym_per_pix + left_fit_meter[1])**2)**1.5) / np.absolute(2*left_fit_meter[0])
                 right_curverad = ((1 + (2*right_fit_meter[0]*image_size_x_y[1]*self.ym_per_pix + right_fit_meter[1])**2)**1.5) / np.absolute(2*right_fit_meter[0])
-                # check the left and right lane line have similar curvature and separated approximately
-                if (np.absolute(left_curverad-right_curverad) < 1500) and (np.absolute((right_fit_meter[2]-self.lane_line_center) - (self.lane_line_center-left_fit_meter[2]))<1) :
-                    # if pass check add new fit data to list and keep the list only contain last 10 data 
-                    # for left
-                    if len(self.left_fit_list) < 5 :
-                        self.left_fit_list.append(left_fit)
-                    else :
-                        temp_list = self.left_fit_list[1:]
-                        temp_list.append(left_fit)
-                        self.left_fit_list = temp_list
-                    # for right
-                    if len(self.right_fit_list) < 5 :
-                        self.right_fit_list.append(right_fit)
-                    else :
-                        temp_list = self.right_fit_list[1:]
-                        temp_list.append(right_fit)
-                        self.right_fit_list = temp_list       
+                '''
+                # if pass check add new fit data to list and keep the list only contain last 10 data 
+                # for left
+                if len(self.left_fit_list) < 5 :
+                    self.left_fit_list.append(left_fit)
                 else :
-                    # if not pass check, drop the data, and thought that we did not receive any data
-                    self.check_fail_counter += 1
-                    self.detected  = False
+                    temp_list = self.left_fit_list[1:]
+                    temp_list.append(left_fit)
+                    self.left_fit_list = temp_list
+                # for right
+                if len(self.right_fit_list) < 5 :
+                    self.right_fit_list.append(right_fit)
+                else :
+                    temp_list = self.right_fit_list[1:]
+                    temp_list.append(right_fit)
+                    self.right_fit_list = temp_list       
             else :
+                '''
                 # if working state is false, meaning this is the first frame
                 left_fit_meter = self.convert_to_meter(left_fit)
                 right_fit_meter = self.convert_to_meter(right_fit)
@@ -458,11 +491,21 @@ class C_LaneLine_t:
                     self.detected = False
                 #note that we succeed detecting lane line pixels, so we change working state to true, and initialize the fit data list   
                 if self.detected :
-                    self.working = True
-                    self.left_fit_list = []
-                    self.right_fit_list = []
-                    self.left_fit_list.append(left_fit)
-                    self.right_fit_list.append(right_fit)
+                '''
+                self.working = True
+                self.left_fit_list = []
+                self.right_fit_list = []
+                self.left_fit_list.append(left_fit)
+                self.right_fit_list.append(right_fit)
+                self.left_fit = left_fit
+                self.right_fit = right_fit
+                left_fit_mean = left_fit
+                right_fit_mean = right_fit
+                left_fit_meter_mean = self.convert_to_meter(left_fit_mean)
+                right_fit_meter_mean = self.convert_to_meter(right_fit_mean)
+                left_curverad = ((1 + (2*left_fit_meter_mean[0]*image_size_x_y[1]*self.ym_per_pix + left_fit_meter_mean[1])**2)**1.5) / np.absolute(2*left_fit_meter_mean[0])
+                right_curverad = ((1 + (2*right_fit_meter_mean[0]*image_size_x_y[1]*self.ym_per_pix + right_fit_meter_mean[1])**2)**1.5) / np.absolute(2*right_fit_meter_mean[0])
+
                     
         # if too many frame fail to detect lane line, we Reset the pipeline 
         if not self.detected :
@@ -488,12 +531,6 @@ class C_LaneLine_t:
         print('self.restart_counter', self.restart_counter)
         print('self.check_fail_counter', self.check_fail_counter)
         
-        left_fit_mean = None
-        right_fit_mean = None
-        left_fit_meter_mean = None
-        right_fit_meter_mean = None
-        left_curverad = None
-        right_curverad = None 
         
         # if pipeline is not working, return empty data, the data need to same size as normal returns
         if (not self.working) :
@@ -542,8 +579,8 @@ class C_LaneLine_t:
         '''
         calculate car offset from lane line center
         '''
-        lift_line_postion = left_fit[0]*image_size_x_y[1]**2 + left_fit[1]*image_size_x_y[0] + left_fit[2]
-        right_line_postion = right_fit[0]*image_size_x_y[1]**2 + right_fit[1]*image_size_x_y[0] + right_fit[2]
+        lift_line_postion = left_fit[0]*image_size_x_y[1]**2 + left_fit[1]*image_size_x_y[1] + left_fit[2]
+        right_line_postion = right_fit[0]*image_size_x_y[1]**2 + right_fit[1]*image_size_x_y[1] + right_fit[2]
         lane_center_postion = (lift_line_postion + right_line_postion) / 2
         camera_center = image_size_x_y[0]/2
         # assuming the camera just fixed at the center of the car
@@ -600,13 +637,14 @@ class C_LaneLine_t:
         # perspective transform 
         warped_image, color_warped_image = self.image_perspective(combined_binary)
         # calculate pixels index 
+        
         left_right_pixels = None                
         if (not self.working) or (self.need_reset) :
             # use hist_detect_lane if reset or first frame
-            left_right_pixels = self.hist_detect_lane(warped_image)
+            left_right_pixels, window_image = self.hist_detect_lane(warped_image)
         else :
             # use hist_detect_lane_with_filter in normal state
-            left_right_pixels = self.hist_detect_lane_with_filter(warped_image, self.left_fit, self.right_fit)
+            left_right_pixels, window_image = self.hist_detect_lane_with_filter(warped_image, self.left_fit, self.right_fit)
         # calculate  parabola coefficients of left and right lane line in pixels    
         current_left_fit, current_right_fit = self.cal_parabola_pixels(image_size_x_y, left_right_pixels) 
         # post process sanity check, smoothing etc...
@@ -617,7 +655,7 @@ class C_LaneLine_t:
         # if pipeline working return augmented image
         car_offset = self.cal_car_offset(image_size_x_y, left_fit_mean, right_fit_mean)
         output_image = self.augmented_display(undist_image, left_fit_mean, right_fit_mean, left_curverad, right_curverad, car_offset)
-    
+        
         return output_image
 
         
@@ -665,7 +703,7 @@ def process_image():
         bgr_color_warped_image = cv2.cvtColor(color_warped_image, cv2.COLOR_RGB2BGR)
         cv2.imwrite('output_images/test_images/warped_'+image_file_path.split('/')[-1], bgr_color_warped_image)  
         # calculate pixels index 
-        left_right_pixels = lane_line.hist_detect_lane(warped_image)
+        left_right_pixels, window_image = lane_line.hist_detect_lane(warped_image)
         # calculate left_fit, right_fit
         left_fit, right_fit = lane_line.cal_parabola_pixels(image_size_x_y, left_right_pixels) 
         # convert to meter
@@ -681,7 +719,28 @@ def process_image():
         # save image
         bgr_output_image = cv2.cvtColor(output_image, cv2.COLOR_RGB2BGR)
         cv2.imwrite('output_images/test_images/result_'+image_file_path.split('/')[-1], bgr_output_image)  
-  
+        
+        fig = plt.figure(figsize=(12,4))
+        plt.subplot(231)
+        plt.imshow(rgb_image)
+        plt.title('rgb_image')
+        plt.subplot(232)
+        plt.imshow(undist_image)
+        plt.title('undist_image')
+        plt.subplot(233)
+        plt.imshow(combined_binary, cmap='gray')
+        plt.title('combined_binary')
+        plt.subplot(234)
+        plt.imshow(warped_image, cmap='gray')
+        plt.title('warped_image')
+        plt.subplot(235)
+        plt.imshow(window_image, cmap='gray')
+        plt.title('window_image')        
+        plt.subplot(236)
+        plt.imshow(output_image)
+        plt.title('Heat Map')
+        fig.tight_layout()
+        plt.show()
                 
 def process_video():
     

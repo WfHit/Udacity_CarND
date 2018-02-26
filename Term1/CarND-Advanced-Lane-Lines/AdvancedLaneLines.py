@@ -43,6 +43,12 @@ class C_LaneLine_t:
         self.hls_h_channel_thresh = [20, 40]
         #threshold for s_channel
         self.hls_s_channel_thresh = [180, 255]
+        #threshold for l_channel
+        self.hls_l_channel_thresh = [200, 255]
+        #threshold for hsv s_channel
+        self.hsv_s_channel_thresh = [0, 20]
+        #threshold for hsv v_channel
+        self.hsv_v_channel_thresh = [200, 255]
         #threshold for b_channel
         self.lab_b_channel_thresh = [190, 255]
         #threshold for sobel x on gray image
@@ -64,7 +70,7 @@ class C_LaneLine_t:
         #meters per pixel in y dimension
         self.ym_per_pix = 30/720 
         #meters per pixel in x dimension
-        self.xm_per_pix = 3.7/470 
+        self.xm_per_pix = 3.7/352
         #left fited parabola coefficients list
         self.left_fit_list = []
         #right fited parabola coefficients list
@@ -150,6 +156,13 @@ class C_LaneLine_t:
         thresh_max = self.hls_h_channel_thresh[1]
         hls_h_channel_binary_image = np.zeros_like(hls_image_h_channel)
         hls_h_channel_binary_image[(hls_image_h_channel >= thresh_min) & (hls_image_h_channel <= thresh_max)] = 1
+        
+        # Detect lane line using L channel
+        thresh_min = self.hls_l_channel_thresh[0]
+        thresh_max = self.hls_l_channel_thresh[1]
+        hls_l_channel_binary_image = np.zeros_like(hls_image_l_channel)
+        hls_l_channel_binary_image[(hls_image_l_channel >= thresh_min) & (hls_image_l_channel <= thresh_max)] = 1
+
         '''
         # Detect lane line using S channel
         thresh_min = self.hls_s_channel_thresh[0]
@@ -173,6 +186,25 @@ class C_LaneLine_t:
         
         #print('sobelx_binary_hls_l_channel_image_max:', np.max(scaled_sobelx_hls_l_channel_image))
         #print('sobelx_binary_hls_l_channel_image_min:', np.min(scaled_sobelx_hls_l_channel_image))
+        
+        # Find lane line on HSV color space
+        hsv_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2HSV)
+        hsv_image_h_channel = hsv_image[:,:,0]
+        hsv_image_s_channel = hsv_image[:,:,1]
+        hsv_image_v_channel = hsv_image[:,:,2] 
+
+        # Detect lane line using H channel
+        thresh_min = self.hsv_s_channel_thresh[0]
+        thresh_max = self.hsv_s_channel_thresh[1]
+        hsv_s_channel_binary_image = np.zeros_like(hsv_image_s_channel)
+        hsv_s_channel_binary_image[(hsv_image_s_channel >= thresh_min) & (hsv_image_s_channel <= thresh_max)] = 1
+        
+        # Detect lane line using H channel
+        thresh_min = self.hsv_v_channel_thresh[0]
+        thresh_max = self.hsv_v_channel_thresh[1]
+        hsv_v_channel_binary_image = np.zeros_like(hsv_image_v_channel)
+        hsv_v_channel_binary_image[(hsv_image_v_channel >= thresh_min) & (hsv_image_v_channel <= thresh_max)] = 1
+        
         '''
         # Find lane line on gray image 
         gray_image = cv2.cvtColor(rgb_image, cv2.COLOR_RGB2GRAY)     
@@ -242,11 +274,11 @@ class C_LaneLine_t:
         # Combine the three binary thresholds
         combined_binary = np.zeros_like(hls_image_s_channel)
         #combined_binary[(h_channel_binary_image == 1) ] = 1 
-        combined_binary[(sobelx_binary_hls_l_channel_image == 1) | ( (hls_h_channel_binary_image == 1)) ] = 1
-        #combined_binary = lab_b_channel_binary_image
+        combined_binary[(sobelx_binary_hls_l_channel_image == 1) | ( (hls_h_channel_binary_image == 1))  | ((hsv_s_channel_binary_image == 1) & (hsv_v_channel_binary_image == 1))] = 1
+        #combined_binary = hls_l_channel_binary_image
         # Stack each channel to view their individual contributions in red, green and blue respectively
         # This returns a stack of the three binary images, whose components you can see as different colors
-        color_binary = np.dstack((combined_binary, combined_binary, combined_binary))
+        color_binary = np.dstack((combined_binary, combined_binary, combined_binary)) * 255
         
         return combined_binary, color_binary
 
@@ -264,7 +296,7 @@ class C_LaneLine_t:
         # binary_closing
         erosion_image = opening(warped_image, square(3))
         #dilation_image = closing(erosion_image, square(3))
-        warped_image = erosion_image
+        warped_image = dilation(erosion_image,square(5))
         # binary_opening
         #open_warped_image = binary_opening(close_warped_image)
         color_warped_image = np.dstack((warped_image, warped_image, warped_image)) * 255
@@ -298,7 +330,7 @@ class C_LaneLine_t:
         leftx_current = leftx_base
         rightx_current = rightx_base
         # Set the width of the windows +/- margin
-        margin = 100
+        margin = 60
         # Set minimum number of pixels found to recenter window
         minpix = 10
         # Create empty lists to receive left and right lane pixel indices
@@ -674,8 +706,8 @@ def process_image():
                       [1150, 720],
                       [130, 720]])                    
     dst = np.float32([[440, 0],
-                      [950,0],
-                      [950,720],
+                      [840,0],
+                      [840,720],
                       [440, 720]])  
     # ceate an object                  
     lane_line = C_LaneLine_t()
@@ -750,9 +782,9 @@ def process_video():
                       [1150, 720],
                       [130, 720]])                    
     dst = np.float32([[440, 0],
-                      [950,0],
-                      [950,720],
-                      [440, 720]]) 
+                      [840,0],
+                      [840,720],
+                      [440, 720]])  
              
     # ceate an object                  
     lane_line = C_LaneLine_t()

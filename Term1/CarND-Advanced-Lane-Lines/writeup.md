@@ -57,13 +57,13 @@ To demonstrate this step, I will describe how I apply the distortion correction 
 
 #### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines 115 through 227 in `AdvancedLaneLines.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
+I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines 124 through 283 in `AdvancedLaneLines.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
 
 ![alt text][binary_road]
 
 #### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
-The code for my perspective transform includes a function called `image_perspective()`, which appears in lines 230 through 243 in the file `AdvancedLaneLines.py`. I chose the hardcode the source and destination points in the following manner:
+The code for my perspective transform includes a function called `image_perspective()`, which appears in lines 386 through 305 in the file `AdvancedLaneLines.py`. I chose the hardcode the source and destination points in the following manner:
 
 ```
     src = np.float32([[566, 460],
@@ -71,8 +71,8 @@ The code for my perspective transform includes a function called `image_perspect
                       [1150, 720],
                       [130, 720]])                    
     dst = np.float32([[440, 0],
-                      [950,0],
-                      [950,720],
+                      [840,0],
+                      [840,720],
                       [440, 720]])  
 ```
 
@@ -81,8 +81,8 @@ This resulted in the following source and destination points:
 | Source        | Destination   | 
 |:-------------:|:-------------:| 
 | 566, 460      | 440, 0        | 
-| 715, 460      | 950, 0        |
-| 1150, 720     | 950, 720      |
+| 715, 460      | 840, 0        |
+| 1150, 720     | 840, 720      |
 | 130, 720      | 440, 720      |
 
 I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
@@ -91,15 +91,15 @@ I verified that my perspective transform was working as expected by drawing the 
 
 #### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-The code for identified lane-line pixels includes a function called `hist_detect_lane()` and `hist_detect_lane_with_filter()`, which appears in lines 246 through 312 and 315 through 377 in the file `AdvancedLaneLines.py`. The difference between this two function is that the last one using a foward filter. 
+The code for identified lane-line pixels includes a function called `hist_detect_lane()` and `hist_detect_lane_with_filter()`, which appears in lines 308 through 374 and 377 through 439 in the file `AdvancedLaneLines.py`. The difference between this two function is that the last one using a foward filter. 
 
 The code for fit their positions with a polynomial includes a function called `cal_parabola_pixels()`, which appears in lines 388 through 410 in the file `AdvancedLaneLines.py`. It return the fitted parabola coefficients in pixels. 
 
 #### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-The code for calculated the radius of curvature of the lane in lines 672 through 676, included in a function called `process_image()`, which appears in the file `AdvancedLaneLines.py`.
+The code for calculated the radius of curvature of the lane in lines 742 through 746, included in a function called `process_image()`, which appears in the file `AdvancedLaneLines.py`.
 
-The code for calculated the vehicle includes a function called `cal_car_offset()`, which appears in lines 541 through 522 in the file `AdvancedLaneLines.py`. 
+The code for calculated the vehicle includes a function called `cal_car_offset()`, which appears in lines 610 through 621 in the file `AdvancedLaneLines.py`. 
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 

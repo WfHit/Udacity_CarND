@@ -103,7 +103,7 @@ The code for calculated the vehicle includes a function called `cal_car_offset()
 
 #### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
 
-I implemented this step in lines 555 through 588 in my code in `AdvancedLaneLines.py` in the function `augmented_display()`.  Here is an example of my result on a test image:
+I implemented this step in lines 624 through 657 in my code in `AdvancedLaneLines.py` in the function `augmented_display()`.  Here is an example of my result on a test image:
 
 ![alt text][result_road]
 

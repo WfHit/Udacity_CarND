@@ -49,7 +49,12 @@ I then explored different color spaces and different `skimage.hog()` parameters 
 
 Here is an example using the `HLS` color space and HOG parameters of `orientations=11`, `pixels_per_cell=(8, 8)` and `cells_per_block=(2, 2)`:
 
-![alt text][hog_image]
+![alt text][cars_hog_image_h]
+![alt text][cars_hog_image_l]
+![alt text][cars_hog_image_s]
+![alt text][not_cars_hog_image_h]
+![alt text][not_cars_hog_image_l]
+![alt text][not_cars_hog_image_s]
 
 #### 2. Explain how you settled on your final choice of HOG parameters.
 

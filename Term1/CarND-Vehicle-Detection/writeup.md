@@ -38,7 +38,7 @@ You're reading it!
 
 #### 1. Explain how (and identify where in your code) you extracted HOG features from the training images.
 
-The code for this step is contained in lines 24 through 91 of the file called `VehicleDectectionSVM.py`.  
+The code for this step is contained in lines 27 through 97 of the file called `VehicleDectectionSVM.py`.  
 
 I started by reading in all the `vehicle` and `non-vehicle` images.  Here is an example of one of each of the `vehicle` and `non-vehicle` classes:
 
@@ -69,7 +69,7 @@ I tried various combinations of parameters and finally I choose HOG parameters a
 
 #### 3. Describe how (and identify where in your code) you trained a classifier using your selected HOG features (and color features if you used them).
 
-I trained a linear SVM using the combination of HOG features and color features which in lines 182 through 281 of the file called `VehicleDectectionSVM.py`. 
+I trained a linear SVM using the combination of HOG features and color features which in lines 233 through 333 of the file called `VehicleDectectionSVM.py`. 
 First I read in all training images and which are more than 8000 for each of cars and not_cars, but I used the front 8000 of both cars and not_cars images for easily compute data size. 
 Then I extract all the features from images, shuffle it, and split to train set and valid set with ratio of 0.2, and normalize the data with `StandardScaler()`
 Next I train the SVM with the normalized data and save the result to file `clf_pickle.pkl`
@@ -78,7 +78,7 @@ Next I train the SVM with the normalized data and save the result to file `clf_p
 
 #### 1. Describe how (and identify where in your code) you implemented a sliding window search.  How did you decide what scales to search and how much to overlap windows?
 
-I implement sliding window search in lines 285 through 461 of the file called `VehicleDectectionSVM.py`. And parameters about search windows as follow:
+I implement sliding window search in lines 337 through 544 of the file called `VehicleDectectionSVM.py`. And parameters about search windows as follow:
     
 | Parameters    | Value                                     | 
 |:-------------:|:-----------------------------------------:| 
@@ -102,7 +102,7 @@ Here's a [link to my video result](./writeup_images/project_video.mp4)
 #### 2. Describe how (and identify where in your code) you implemented some kind of filter for false positives and some method for combining overlapping bounding boxes.
 
 After a lot of struggle on SVM, I just find out that using SVM to detect cars is time consuming and unstable, and I could not get an acceptable result. So I have to turn to SSD. 
-Here is how I use SSD to detect cars in video which in file `VehicleDectectionSSD.py`. First I use a trained SSD to detect cars on single image, then I created a heatmap and thresholded that map to identify vehicle positions.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap.  I then assumed each blob corresponded to a vehicle. I constructed bounding boxes to cover the area of each blob detected.  
+Here is how I use SSD to detect cars in video which in file `VehicleDectectionSSD.py`. First I use a trained SSD to detect cars on single image in line 45 to 92, then I created a heatmap and thresholded that map to identify vehicle positions in line 95 to 117.  I then used `scipy.ndimage.measurements.label()` to identify individual blobs in the heatmap in line 119 to 136.  I then assumed each blob corresponded to a vehicle. I constructed bounding boxes to cover the area of each blob detected in line 138 to 154.  
 
 ---
 
@@ -110,7 +110,7 @@ Here is how I use SSD to detect cars in video which in file `VehicleDectectionSS
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-The biggest issues I faced is that though the trained SVM working perfect on test data, it performance is not acceptable on video frame, I'm not sure why this appends, may be the model is overfited. And it is more accuracy to detect black car than detect white cars, especially when cars is far and its image is small. 
+The biggest issues I faced is that though the trained SVM working perfect on test data, it performance is not acceptable on video frame, I'm not sure why this appends, may be the model is overfited. And it is more accuracy to detect black car than detect white cars, especially when cars is far and its image is small.   
 When I used the SVM, pipeline is likely to fail when the cars pass the white bridge using SVM, I think I need to add some features in other color space to decrease the influence of the road background color.
 
 ### Reference 

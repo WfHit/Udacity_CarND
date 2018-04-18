@@ -67,8 +67,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     
         //the initial state covariance matrix P_
     ekf_.P_ = MatrixXd(4, 4);
-    ekf_.P_ << 100, 0, 0, 0,
-		           0, 100, 0, 0,
+    ekf_.P_ << 1, 0, 0, 0,
+		           0, 1, 0, 0,
 		           0, 0, 1000, 0,
 		           0, 0, 0, 1000;
 		           

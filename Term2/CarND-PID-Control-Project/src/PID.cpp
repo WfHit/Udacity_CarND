@@ -27,13 +27,16 @@ void PID::UpdateError(double cte) {
   p_error = cte;
   d_error = cte - last_cte;
   i_error += cte;
+  if(i_error > 1000.0) i_error = 1000.0;
+  if(i_error < -1000.0) i_error = -1000.0; 
   last_cte = cte;
+  
 }
 
 double PID::TotalError() {
   // calculate PID output
   double control_output = Kp * p_error + Ki * i_error + Kd * d_error;
-
+  
   return control_output;
 }
 

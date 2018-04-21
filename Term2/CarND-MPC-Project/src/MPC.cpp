@@ -6,8 +6,8 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 10;
-double dt = 0.1;
+size_t N = 25;
+double dt = 0.05;
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -36,15 +36,15 @@ size_t a_start = delta_start + N - 1;
 // reference value for cte, epsi, velocity
 double ref_cte = 0;
 double ref_epsi = 0;
-double ref_v = 80;
+double ref_speed = 60;
 
 //Weights for cost
-int weight_cte = 1;
-int weight_eps = 1;
-int weight_speed = 1;
-int weight_delta = 100;
-int weight_a = 100;
-int weight_delta_gap = 100;
+int weight_cte = 60;
+int weight_delta = 100000;
+int weight_delta_gap = 1000;
+int weight_eps = 10;
+int weight_speed = 10;
+int weight_a = 20;
 int weight_a_gap = 100;
 
 class FG_eval {
@@ -66,7 +66,7 @@ class FG_eval {
     for (size_t idx = 0; idx < N; idx++) {
       fg[0] += weight_cte * CppAD::pow(vars[cte_start + idx] - ref_cte, 2);
       fg[0] += weight_eps * CppAD::pow(vars[epsi_start + idx]- ref_epsi, 2);
-      fg[0] += weight_speed * CppAD::pow(vars[v_start + idx] - ref_v, 2);
+      fg[0] += weight_speed * CppAD::pow(vars[v_start + idx] - ref_speed, 2);
     }
 
     // Minimize the use of actuators.
@@ -113,8 +113,8 @@ class FG_eval {
       AD<double> delta0 = vars[delta_start + idx - 1];
       AD<double> a0 = vars[a_start + idx - 1];
 
-      AD<double> f0 = coeffs[0] + coeffs[1] * x0;
-      AD<double> psides0 = CppAD::atan(coeffs[1]);
+      AD<double> f0 = coeffs[0] + coeffs[1] * x0 + coeffs[2] * x0 * x0 + coeffs[3] * x0 * x0 *x0;
+      AD<double> psides0 = CppAD::atan(3 * coeffs[3] * x0 * x0 + 2 * coeffs[2] * x0 + coeffs[1]);
 
       // Here's `x` to get you started.
       // The idea here is to constraint this value to be 0.

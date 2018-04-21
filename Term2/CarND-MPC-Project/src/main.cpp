@@ -102,14 +102,15 @@ int main() {
           assert(ptsx.size() == ptsy.size());
           
           // transform waypiont from global coordinate system to car's coordinate system
-          int waypiont_num = ptsx.size();
-          auto waypoints = Eigen::MatrixXd(2,waypiont_num);
-          for (auto i=0; i<waypiont_num ; i++){
-            waypoints(0,i) =   cos(psi) * (ptsx[i] - px) + sin(psi) * (ptsy[i] - py);
-            waypoints(1,i) =  -sin(psi) * (ptsx[i] - px) + cos(psi) * (ptsy[i] - py);  
+          auto waypiont_num = ptsx.size();
+          Eigen::VectorXd waypionts_x = Eigen::VectorXd(waypiont_num);
+          Eigen::VectorXd waypionts_y = Eigen::VectorXd(waypiont_num);
+
+          for (size_t i=0; i<waypiont_num ; i++){
+            waypionts_x[i] =   cos(psi) * (ptsx[i] - px) + sin(psi) * (ptsy[i] - py);
+            waypionts_y[i] =  -sin(psi) * (ptsx[i] - px) + cos(psi) * (ptsy[i] - py);  
           } 
-          Eigen::VectorXd waypionts_x = waypoints.row(0);
-          Eigen::VectorXd waypionts_y = waypoints.row(1);
+
           std::cout << "waypionts size : " << waypionts_x.size() << std::endl;
           
           // fit a polynomial line
@@ -135,14 +136,17 @@ int main() {
           vector<double> mpc_x_vals;
           vector<double> mpc_y_vals;
           //Display the waypoints/reference line
+          for(size_t idx=0; idx<list_size; idx++) {
+            steer_value.push_back(result[4*idx+0]);
+            throttle_value.push_back(result[4*idx+1]);
+            mpc_x_vals.push_back(result[4*idx+2]);
+            mpc_y_vals.push_back(result[4*idx+3]);
+          }
+
+          //Display the waypoints/reference line
           vector<double> next_x_vals;
           vector<double> next_y_vals;
-          for(size_t idx=0; idx<6; idx++) {
-            std::cout << "list idx : " << idx << std::endl;
-            steer_value.push_back(result[idx+0]);
-            throttle_value.push_back(result[idx+1]);
-            mpc_x_vals.push_back(result[idx+2]);
-            mpc_y_vals.push_back(result[idx+3]);
+          for(size_t idx=0; idx<waypiont_num; idx++) {
             next_x_vals.push_back(waypionts_x[idx]);
             next_y_vals.push_back(waypionts_y[idx]);
           }
@@ -150,8 +154,8 @@ int main() {
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          msgJson["steering_angle"] = -steer_value[0]/(deg2rad(25));
-          msgJson["throttle"] = throttle_value[0];
+          msgJson["steering_angle"] = -steer_value[1]/(deg2rad(25));
+          msgJson["throttle"] = throttle_value[1];
           std::cout << "steering_angle : " << steer_value[1]/(deg2rad(25)) << std::endl;
           std::cout << "throttle : " << throttle_value[1] << std::endl;
           //Display the MPC predicted trajectory 

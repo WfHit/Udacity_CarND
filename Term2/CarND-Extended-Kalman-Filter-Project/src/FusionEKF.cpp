@@ -56,7 +56,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   
     // first measurement
     
-    cout << "EKF initialize " << endl;
+    //cout << "EKF initialize " << endl;
 
     //the initial transition matrix F_
     ekf_.F_ = MatrixXd(4, 4);
@@ -156,8 +156,8 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   }
 
   // print the output
-  cout << "x_ = " << ekf_.x_ << endl;
-  cout << "P_ = " << ekf_.P_ << endl;
+  //cout << "x_ = " << ekf_.x_ << endl;
+  //cout << "P_ = " << ekf_.P_ << endl;
 }
 
 

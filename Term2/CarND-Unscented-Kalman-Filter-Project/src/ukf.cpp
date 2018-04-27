@@ -26,10 +26,10 @@ UKF::UKF() {
   P_ = MatrixXd(5, 5);
 
   // Process noise standard deviation longitudinal acceleration in m/s^2
-  std_a_ = 1.0;
+  std_a_ = 10.5;
 
   // Process noise standard deviation yaw acceleration in rad/s^2
-  std_yawdd_ = 0.15;
+  std_yawdd_ = 0.35;
   
   //DO NOT MODIFY measurement noise values below these are provided by the sensor manufacturer.
   // Laser measurement noise standard deviation position1 in m
@@ -127,12 +127,12 @@ UKF::~UKF()
 void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
 
   if (meas_package.sensor_type_ == MeasurementPackage::RADAR) {
-    std::cout << "---------MeasurementPackage::RADAR----------" << std::endl;
+    //std::cout << "---------MeasurementPackage::RADAR----------" << std::endl;
     if(!use_radar_)
       return;
   }
   else if (meas_package.sensor_type_ == MeasurementPackage::LASER) {
-    std::cout << "---------MeasurementPackage::LASER----------" << std::endl;
+    //std::cout << "---------MeasurementPackage::LASER----------" << std::endl;
     if(!use_laser_)
       return;
   }
@@ -193,7 +193,7 @@ void UKF::ProcessMeasurement(MeasurementPackage meas_package) {
     // done initializing, no need to predict or update
     is_initialized_ = true;
     
-    std::cout << "UKF succeed initialize " << std::endl;
+    //std::cout << "UKF succeed initialize " << std::endl;
     
     return;
   }
@@ -311,13 +311,13 @@ void UKF::GenerateSigmaPoints() {
   }
   
   //print result
-  std::cout << "Xsig_aug_ = " << std::endl << Xsig_aug_ << std::endl;
+  //std::cout << "Xsig_aug_ = " << std::endl << Xsig_aug_ << std::endl;
 
 }
 
 void UKF::SigmaPointPrediction(double delta_t) {
 
-  std::cout << "delta_t = "  << delta_t << std::endl;
+  //std::cout << "delta_t = "  << delta_t << std::endl;
   
   //predict sigma points
   for (int i = 0; i< 2*n_aug_+1; i++)
@@ -365,7 +365,7 @@ void UKF::SigmaPointPrediction(double delta_t) {
   }
 
   //print result
-  std::cout << "Xsig_pred_ = " << std::endl << Xsig_pred_ << std::endl;
+  //std::cout << "Xsig_pred_ = " << std::endl << Xsig_pred_ << std::endl;
 
 }
 
@@ -391,10 +391,10 @@ void UKF::PredictMeanAndCovariance() {
   }
 
   //print result
-  std::cout << "Predicted state" << std::endl;
-  std::cout << x_ << std::endl;
-  std::cout << "Predicted covariance matrix" << std::endl;
-  std::cout << P_ << std::endl;
+  //std::cout << "Predicted state" << std::endl;
+  //std::cout << x_ << std::endl;
+  //std::cout << "Predicted covariance matrix" << std::endl;
+  //std::cout << P_ << std::endl;
 
 }
 
@@ -456,8 +456,8 @@ void UKF::PredictRadarMeasurement() {
 
 
   //print result
-  std::cout << "radar_z_pred_: " << std::endl << radar_z_pred_ << std::endl;
-  std::cout << "radar_S_: " << std::endl << radar_S_ << std::endl;
+  //std::cout << "radar_z_pred_: " << std::endl << radar_z_pred_ << std::endl;
+  //std::cout << "radar_S_: " << std::endl << radar_S_ << std::endl;
 
 }
 
@@ -505,8 +505,8 @@ void UKF::RadarUpdateState(const VectorXd &z) {
   radar_NIS_file_ << NIS_radar_ << std::endl;
     
   //print result
-  std::cout << "Updated radar state x: " << std::endl << x_ << std::endl;
-  std::cout << "Updated radar state covariance P: " << std::endl << P_ << std::endl;
+  //std::cout << "Updated radar state x: " << std::endl << x_ << std::endl;
+  //std::cout << "Updated radar state covariance P: " << std::endl << P_ << std::endl;
 
 }
 
@@ -549,8 +549,8 @@ void UKF::PredictLaserMeasurement() {
   laser_S_ = laser_S_ + R;
 
   //print result
-  std::cout << "laser_z_pred_: " << std::endl << laser_z_pred_ << std::endl;
-  std::cout << "laser_S_: " << std::endl << laser_S_ << std::endl;
+  //std::cout << "laser_z_pred_: " << std::endl << laser_z_pred_ << std::endl;
+  //std::cout << "laser_S_: " << std::endl << laser_S_ << std::endl;
 
 }
 
@@ -591,7 +591,7 @@ void UKF::LaserUpdateState(const VectorXd &z) {
   laser_NIS_file_ << NIS_laser_ << std::endl;
   
   //print result
-  std::cout << "Updated laser state x: " << std::endl << x_ << std::endl;
-  std::cout << "Updated laser state covariance P: " << std::endl << P_ << std::endl;
+  //std::cout << "Updated laser state x: " << std::endl << x_ << std::endl;
+  //std::cout << "Updated laser state covariance P: " << std::endl << P_ << std::endl;
 
 }

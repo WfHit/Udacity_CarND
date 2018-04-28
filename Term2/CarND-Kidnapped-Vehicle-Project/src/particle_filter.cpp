@@ -25,7 +25,8 @@ void ParticleFilter::init(double gps_x, double gps_y, double gps_theta, double s
 	// Add random Gaussian noise to each particle.
 	// NOTE: Consult particle_filter.h for more information about this method (and others in this file).
 	
-  std::cout << "PF start initialize " << std::endl;
+  //std::cout << "PF start initialize " << std::endl;
+  
 	// Number of particles to draw
 	num_particles = 100; 
 	
@@ -55,7 +56,7 @@ void ParticleFilter::init(double gps_x, double gps_y, double gps_theta, double s
 	// filter is initialized
 	is_initialized = true;
   
-  std::cout << "PF succeed initialize " << std::endl;
+  //std::cout << "PF succeed initialize " << std::endl;
   
   return;
 }
@@ -99,9 +100,9 @@ void ParticleFilter::prediction(double delta_t, double std_pos[], double velocit
     particles[i].y += dist_y(gen);
     particles[i].theta += dist_theta(gen);
     
-    std::cout << "predicted particles x : " << particles[i].x << std::endl;
-    std::cout << "predicted particles y : " << particles[i].y << std::endl;
-    std::cout << "predicted particles theta : " << particles[i].theta << std::endl;
+    //std::cout << "predicted particles x : " << particles[i].x << std::endl;
+    //std::cout << "predicted particles y : " << particles[i].y << std::endl;
+    //std::cout << "predicted particles theta : " << particles[i].theta << std::endl;
     
   }
 

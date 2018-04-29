@@ -27,8 +27,8 @@ void PID::UpdateError(double cte) {
   p_error = cte;
   d_error = cte - last_cte;
   i_error += cte;
-  if(i_error > 1000.0) i_error = 1000.0;
-  if(i_error < -1000.0) i_error = -1000.0; 
+  if(i_error > 10000000.0) i_error = 10000000.0;
+  if(i_error < -10000000.0) i_error = -10000000.0; 
   last_cte = cte;
   
 }

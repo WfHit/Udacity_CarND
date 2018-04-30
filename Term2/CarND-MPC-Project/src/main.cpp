@@ -154,10 +154,10 @@ int main() {
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          msgJson["steering_angle"] = -steer_value[1]/(deg2rad(25));
+          msgJson["steering_angle"] = -steer_value[1]/(deg2rad(25)); 
           msgJson["throttle"] = throttle_value[1];
-          std::cout << "steering_angle : " << steer_value[1]/(deg2rad(25)) << std::endl;
-          std::cout << "throttle : " << throttle_value[1] << std::endl;
+          std::cout << "steering_angle : " << steer_value[2]/(deg2rad(25)) << std::endl;
+          std::cout << "throttle : " << throttle_value[2] << std::endl;
           //Display the MPC predicted trajectory 
 
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system

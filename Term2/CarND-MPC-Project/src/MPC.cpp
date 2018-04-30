@@ -6,7 +6,7 @@
 using CppAD::AD;
 
 // TODO: Set the timestep length and duration
-size_t N = 25;
+size_t N = 20;
 double dt = 0.05;
 
 // This value assumes the model presented in the classroom is used.
@@ -36,7 +36,7 @@ size_t a_start = delta_start + N - 1;
 // reference value for cte, epsi, velocity
 double ref_cte = 0;
 double ref_epsi = 0;
-double ref_speed = 60;
+double ref_speed = 90;
 
 //Weights for cost
 int weight_cte = 60;
@@ -66,7 +66,7 @@ class FG_eval {
     for (size_t idx = 0; idx < N; idx++) {
       fg[0] += weight_cte * CppAD::pow(vars[cte_start + idx] - ref_cte, 2);
       fg[0] += weight_eps * CppAD::pow(vars[epsi_start + idx]- ref_epsi, 2);
-      fg[0] += weight_speed * CppAD::pow(vars[v_start + idx] - ref_speed, 2);
+      fg[0] += weight_speed * CppAD::pow(vars[v_start + idx] - (ref_speed-350*fabs(atan(coeffs[1]))), 2);
     }
 
     // Minimize the use of actuators.

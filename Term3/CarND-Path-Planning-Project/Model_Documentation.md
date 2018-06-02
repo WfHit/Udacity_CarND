@@ -38,7 +38,7 @@ This class implements spline interpolation. To use this class, first we need to 
 
 
 `C_Navigation_t`  
-This class read in waypoints from file highway_map.csv, then use this data to create three spline object x to s, y to s, dx to s and dy to s. Do given s and d we can caculate x, y, dx, dy at any piont. It's public interface is descripted below:
+This class read in waypoints from file highway_map.csv, then use this data to create three spline object x to s, y to s, dx to s and dy to s. So given s and d we can caculate x, y, dx, dy at any piont. It's public interface is descripted below:
 
 | Method Name         	|     Description	                              | 
 |:---------------------:|:---------------------------------------------:| 
